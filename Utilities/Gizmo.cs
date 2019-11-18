@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using WIDVE.Utilities.Extensions;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace WIDVE.Utilities
 {
@@ -145,8 +147,12 @@ namespace WIDVE.Utilities
 				case Types.Texture:
 					if (texture != null && textureMaterial != null)
 					{
-						Gizmos.DrawGUITexture(textureRect, texture,
-											  textureLeftBorder, textureRightBorder, textureTopBorder, textureBottomBorder,
+						Gizmos.DrawGUITexture(textureRect,
+											  texture,
+											  textureLeftBorder,
+											  textureRightBorder,
+											  textureTopBorder,
+											  textureBottomBorder,
 											  textureMaterial);
 					}
 					break;
@@ -166,5 +172,135 @@ namespace WIDVE.Utilities
 					break;
 			}
 		}
+
+#if UNITY_EDITOR
+		[CustomEditor(typeof(Gizmo))]
+		public class Editor : UnityEditor.Editor
+		{
+			SerializedProperty Type;
+			SerializedProperty Color;
+			SerializedProperty Size;
+			SerializedProperty UseWorldScale;
+			SerializedProperty DrawWhenSelected;
+			//line only
+			SerializedProperty LineStart;
+			SerializedProperty LineEnd;
+			//frustum only
+			SerializedProperty FrustumFOV;
+			SerializedProperty FrustumMaxRange;
+			SerializedProperty FrustumMinRange;
+			SerializedProperty FrustumAspect;
+			//icon only
+			SerializedProperty IconFilename;
+			SerializedProperty IconAllowScaling;
+			//texture only
+			SerializedProperty TextureRect;
+			SerializedProperty Texture;
+			SerializedProperty TextureMaterial;
+			SerializedProperty TextureLeftBorder;
+			SerializedProperty TextureRightBorder;
+			SerializedProperty TextureTopBorder;
+			SerializedProperty TextureBottomBorder;
+			//mesh only
+			SerializedProperty Mesh;
+			SerializedProperty MeshPosition;
+			SerializedProperty MeshRotation;
+
+			void OnEnable()
+			{
+				Type = serializedObject.FindProperty(nameof(Gizmo.Type));
+				Color = serializedObject.FindProperty(nameof(Gizmo.Color));
+				Size = serializedObject.FindProperty(nameof(Gizmo.Size));
+				UseWorldScale = serializedObject.FindProperty(nameof(Gizmo.UseWorldScale));
+				DrawWhenSelected = serializedObject.FindProperty(nameof(Gizmo.DrawWhenSelected));
+				//line
+				LineStart = serializedObject.FindProperty(nameof(Gizmo.LineStart));
+				LineEnd = serializedObject.FindProperty(nameof(Gizmo.LineEnd));
+				//frustum
+				FrustumFOV = serializedObject.FindProperty(nameof(Gizmo.FrustumFOV));
+				FrustumMaxRange = serializedObject.FindProperty(nameof(Gizmo.FrustumMaxRange));
+				FrustumMinRange = serializedObject.FindProperty(nameof(Gizmo.FrustumMinRange));
+				FrustumAspect = serializedObject.FindProperty(nameof(Gizmo.FrustumAspect));
+				//icon
+				IconFilename = serializedObject.FindProperty(nameof(Gizmo.IconFilename));
+				IconAllowScaling = serializedObject.FindProperty(nameof(Gizmo.IconAllowScaling));
+				//texture
+				TextureRect = serializedObject.FindProperty(nameof(Gizmo.TextureRect));
+				Texture = serializedObject.FindProperty(nameof(Gizmo.Texture));
+				TextureMaterial = serializedObject.FindProperty(nameof(Gizmo.TextureMaterial));
+				TextureLeftBorder = serializedObject.FindProperty(nameof(Gizmo.TextureLeftBorder));
+				TextureRightBorder = serializedObject.FindProperty(nameof(Gizmo.TextureRightBorder));
+				TextureTopBorder = serializedObject.FindProperty(nameof(Gizmo.TextureTopBorder));
+				TextureBottomBorder = serializedObject.FindProperty(nameof(Gizmo.TextureBottomBorder));
+				//mesh
+				Mesh = serializedObject.FindProperty(nameof(Gizmo.Mesh));
+				MeshPosition = serializedObject.FindProperty(nameof(Gizmo.MeshPosition));
+				MeshRotation = serializedObject.FindProperty(nameof(Gizmo.MeshRotation));
+			}
+
+			public override void OnInspectorGUI()
+			{	//draw properties based on current type...
+				serializedObject.Update();
+
+				EditorGUILayout.PropertyField(Type);
+
+				if (Type.enumValueIndex != (int)Types.Texture)
+				{
+					EditorGUILayout.PropertyField(Color);
+				}
+
+				if (Type.enumValueIndex != (int)Types.Texture &&
+					Type.enumValueIndex != (int)Types.Line &&
+					Type.enumValueIndex != (int)Types.Frustum &&
+					Type.enumValueIndex != (int)Types.Icon)
+				{
+					EditorGUILayout.PropertyField(Size);
+				}
+
+				EditorGUILayout.PropertyField(UseWorldScale);
+				EditorGUILayout.PropertyField(DrawWhenSelected);
+
+				if (Type.enumValueIndex == (int)Types.Line)
+				{
+					EditorGUILayout.PropertyField(LineStart);
+					EditorGUILayout.PropertyField(LineEnd);
+				}
+
+				if (Type.enumValueIndex == (int)Types.Frustum)
+				{
+					EditorGUILayout.PropertyField(FrustumFOV);
+					EditorGUILayout.PropertyField(FrustumMinRange);
+					EditorGUILayout.PropertyField(FrustumMaxRange);
+					EditorGUILayout.PropertyField(FrustumAspect);
+				}
+
+				if (Type.enumValueIndex == (int)Types.Icon)
+				{
+					EditorGUILayout.PropertyField(IconFilename);
+					EditorGUILayout.PropertyField(IconAllowScaling);
+				}
+
+				if (Type.enumValueIndex == (int)Types.Texture)
+				{
+					EditorGUILayout.PropertyField(Texture);
+					EditorGUILayout.PropertyField(TextureMaterial);
+					EditorGUILayout.PropertyField(TextureRect);
+					EditorGUILayout.PropertyField(TextureLeftBorder);
+					EditorGUILayout.PropertyField(TextureRightBorder);
+					EditorGUILayout.PropertyField(TextureTopBorder);
+					EditorGUILayout.PropertyField(TextureBottomBorder);
+				}
+
+				if (Type.enumValueIndex == (int)Types.Mesh || Type.enumValueIndex == (int)Types.WireMesh)
+				{
+					EditorGUILayout.PropertyField(Mesh);
+					EditorGUILayout.PropertyField(MeshPosition);
+					EditorGUILayout.PropertyField(MeshRotation);
+				}
+
+				serializedObject.ApplyModifiedProperties();
+			}
+		}
+#endif
 	}
 }
