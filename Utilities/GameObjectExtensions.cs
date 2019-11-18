@@ -111,26 +111,6 @@ namespace WIDVE.Utilities.Extensions
 		}
 
 		/// <summary>
-		/// Return the first component of the given type found in this object or its children.
-		/// </summary>
-		/// <typeparam name="T">Type of Component to find.</typeparam>
-		/// <returns>First found component.</returns>
-		public static T GetComponentRecursive<T>(this GameObject gameObject) where T : Component
-		{
-			T component = gameObject.GetComponent<T>();
-			if (!component)
-			{
-				for(int i = 0; i < gameObject.transform.childCount; i++)
-				{
-					GameObject child = gameObject.transform.GetChild(i).gameObject;
-					component = child.GetComponentRecursive<T>();
-					if (component) break;
-				}
-			}
-			return component;
-		}
-
-		/// <summary>
 		/// Returns true if this GameObject or any of its parent objects are currently selected in the Editor.
 		/// <para>Returns false when not in Edit mode.</para>
 		/// </summary>
@@ -174,6 +154,7 @@ namespace WIDVE.Utilities.Extensions
 
 		/// <summary>
 		/// In Edit mode, mark the scene containing this GameObject as dirty.
+		/// <para>In Play mode, does nothing.</para>
 		/// </summary>
 		public static void MarkDirty(this GameObject gameObject, bool force=false)
 		{
