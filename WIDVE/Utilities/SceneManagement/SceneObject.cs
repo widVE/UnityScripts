@@ -9,12 +9,12 @@ using UnityEditor.SceneManagement;
 #endif
 using WIDVE.Patterns.Commands;
 
-namespace WIDVE.Utilities.SceneManagement
+namespace WIDVE.Utilities
 {
 	/// <summary>
 	/// ScriptableObject class to store Scene data persistently, in the editor and in builds.
 	/// </summary>
-	[CreateAssetMenu(fileName ="SceneObject", menuName = UtilitiesEditor.MenuName + "/SceneObject", order = UtilitiesEditor.Order)]
+	[CreateAssetMenu(fileName ="SceneObject", menuName = nameof(Utilities) + "/SceneObject", order = UtilitiesEditor.ORDER)]
 	public class SceneObject : ScriptableObject
 #if UNITY_EDITOR
 							 , ISerializationCallbackReceiver
@@ -58,6 +58,19 @@ namespace WIDVE.Utilities.SceneManagement
 		{
 			get => _index;
 			private set => _index = value;
+		}
+
+		/// <summary>
+		/// Returns true if the Scene is loaded, false otherwise.
+		/// </summary>
+		public bool IsLoaded
+		{
+			get
+			{
+				Scene scene = GetScene();
+				if(scene != null) return scene.isLoaded;
+				else return false;
+			}
 		}
 
 #if UNITY_EDITOR
@@ -492,47 +505,5 @@ namespace WIDVE.Utilities.SceneManagement
 			}
 		}
 #endif
-	}
-
-	[CreateAssetMenu(fileName = nameof(SceneObjectList), menuName = UtilitiesEditor.MenuName + "/" + nameof(SceneObjectList), order = UtilitiesEditor.Order)]
-	public class SceneObjectList : ScriptableObjectList<SceneObject>
-	{
-		[SerializeField]
-		List<SceneObject> _objects;
-		protected override List<SceneObject> Objects => _objects ?? (_objects = new List<SceneObject>());
-		protected override string SerializedListName => nameof(_objects);
-
-		public SceneObject Load(int index)
-		{
-			SceneObject loadMe = this[index];
-			loadMe.Load();
-			return loadMe;
-		}
-
-		public SceneObject Unload(int index)
-		{
-			SceneObject unloadMe = this[index];
-			unloadMe.Unload();
-			return unloadMe;
-		}
-
-		public void LoadAll()
-		{
-			for (int i = 0; i < Count; i++)
-			{
-				Load(i);
-			}
-		}
-
-		public void UnloadAll()
-		{
-			for (int i = 0; i < Count; i++)
-			{
-				Unload(i);
-			}
-		}
-
-		[CustomEditor(typeof(SceneObjectList))]
-		new public class Editor : ScriptableObjectList<SceneObject>.Editor { }
 	}
 }

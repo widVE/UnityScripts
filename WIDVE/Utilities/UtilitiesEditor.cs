@@ -6,8 +6,6 @@ namespace WIDVE.Utilities
 {
 	public static class UtilitiesEditor
 	{
-		public const string MenuName = "Utilities";
-		public const int Order = 1500;
-		public const string SVMenuName = "ScriptableVariables";
+		public const int ORDER = 1500;
 	}
 }

@@ -9,17 +9,23 @@ using UnityEditorInternal;
 namespace WIDVE.Utilities
 {
 	/// <summary>
-	/// Extend this class to draw a list of ScriptableObjects as a reorderable list.
+	/// ScriptableObject that contains a reorderable list of other ScriptableObject.
+	/// <para>Any derived classes must exist in their own script file, or Unity will not be able to serialize them.</para>
 	/// </summary>
-	public abstract class ScriptableObjectList<T> : ScriptableObject where T : ScriptableObject
+	/// <typeparam name="T"></typeparam>
+	public abstract class ScriptableObjectList<T> : ScriptableObject, IEnumerable where T : ScriptableObject
 	{
+		// Since Unity can't serialize generics, a serialized List<T> must exist in the child class.
+		// Access this list using the following properties:
+
 		/// <summary>
 		/// The name of the underlying serialized field used by the Objects property.
+		/// <para>Needed when creating the reorderable list in the editor.</para>
 		/// </summary>
 		protected abstract string SerializedListName { get; }
 
 		/// <summary>
-		/// Returns a serialized, non-generic list of objects of type T.
+		/// Access the underlying serailized list.
 		/// </summary>
 		protected abstract List<T> Objects { get; }
 
@@ -37,15 +43,24 @@ namespace WIDVE.Utilities
 			set => Objects[index] = value;
 		}
 
+		public IEnumerator GetEnumerator()
+		{
+			return Objects.GetEnumerator();
+		}
+
 #if UNITY_EDITOR
 		/// <summary>
 		/// Custom editor that draws list contents as a reorderable list.
+		/// <para>Extend this editor in any derived classes.</para>
 		/// </summary>
-		public class Editor : UnityEditor.Editor
+		public abstract class Editor : UnityEditor.Editor
 		{
 			ScriptableObjectList<T> Target;
 			ReorderableList List;
 
+			/// <summary>
+			/// Initialize the reorderable list.
+			/// </summary>
 			protected virtual void OnEnable()
 			{
 				Target = target as ScriptableObjectList<T>;
@@ -67,6 +82,9 @@ namespace WIDVE.Utilities
 				};
 			}
 
+			/// <summary>
+			/// Draw the reorderable list.
+			/// </summary>
 			public override void OnInspectorGUI()
 			{
 				serializedObject.Update();

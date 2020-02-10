@@ -10,71 +10,63 @@ namespace WIDVE.Utilities
 	public class Gizmo : MonoBehaviour
 	{
 		public enum Types { Sphere, Cube, WireSphere, WireCube, Ray, Line, Frustum, Icon, Texture, Mesh, WireMesh }
-		[SerializeField]
-		Types Type = Types.WireSphere;
-		[SerializeField]
-		Color Color = Color.blue;
-		[SerializeField][Range(0.01f, 5f)]
-		float Size = 1f;
-		[SerializeField]
-		bool UseWorldScale = true;
-		[SerializeField]
-		bool DrawWhenSelected = false;
-		//line only
-		[SerializeField]
-		Vector3 LineStart = Vector3.zero;
-		[SerializeField]
-		Vector3 LineEnd = Vector3.forward;
-		//frustum only
-		[SerializeField]
-		float FrustumFOV = 60f;
-		[SerializeField]
-		float FrustumMaxRange = 1f;
-		[SerializeField]
-		float FrustumMinRange = .1f;
-		[SerializeField]
-		float FrustumAspect = 1f;
-		//icon only
-		[SerializeField]
-		string IconFilename = string.Empty;
-		[SerializeField]
-		bool IconAllowScaling = true;
-		//texture only
-		[SerializeField]
-		Rect TextureRect = Rect.zero;
-		[SerializeField]
-		Texture Texture = null;
-		[SerializeField]
-		Material TextureMaterial = null;
-		[SerializeField]
-		int TextureLeftBorder = 0;
-		[SerializeField]
-		int TextureRightBorder = 0;
-		[SerializeField]
-		int TextureTopBorder = 0;
-		[SerializeField]
-		int TextureBottomBorder = 0;
-		//mesh only
-		[SerializeField]
-		Mesh Mesh = null;
-		[SerializeField]
-		Vector3 MeshPosition = Vector3.zero;
-		[SerializeField]
-		Vector3 MeshRotation = Vector3.zero;
+		public enum DrawModes { Hidden, Always, IfSelected, IfTopLevelSelection, IfNotSelected }
 
-		void OnDrawGizmos()
-		{
-			if (!DrawWhenSelected)
-			{
-				Draw();
-			}
-		}
+		public Types Type = Types.WireSphere;
+		public Color Color = Color.blue;
+		public float Size = 1f;
+		public bool UseWorldScale = true;
+		public DrawModes DrawMode = DrawModes.Always;
 
-		void OnDrawGizmosSelected()
+		//line data
+		public Vector3 LineStart = Vector3.zero;
+		public Vector3 LineEnd = Vector3.forward;
+
+		//frustum data
+		public float FrustumFOV = 60f;
+		public float FrustumMaxRange = 1f;
+		public float FrustumMinRange = .1f;
+		public float FrustumAspect = 1f;
+
+		//icon data
+		public string IconFilename = string.Empty;
+		public bool IconAllowScaling = true;
+
+		//texture data
+		public Rect TextureRect = Rect.zero;
+		public Texture Texture = null;
+		public Material TextureMaterial = null;
+		public int TextureLeftBorder = 0;
+		public int TextureRightBorder = 0;
+		public int TextureTopBorder = 0;
+		public int TextureBottomBorder = 0;
+
+		//mesh data
+		public Mesh Mesh = null;
+		public Vector3 MeshPosition = Vector3.zero;
+		public Vector3 MeshRotation = Vector3.zero;
+		public Vector3 MeshScale = Vector3.one;
+
+		void DrawGizmo()
 		{
-			if (DrawWhenSelected)
+			switch (DrawMode)
 			{
-				Draw();
+				default:
+				case DrawModes.Hidden:
+					break;
+				case DrawModes.Always:
+					Draw();
+					break;
+				case DrawModes.IfSelected:
+					if (gameObject.IsSelected()) Draw();
+					break;
+				case DrawModes.IfTopLevelSelection:
+					if (gameObject.IsTopLevelSelection()) Draw();
+					break;
+				case DrawModes.IfNotSelected:
+					if (gameObject.IsTopLevelSelection()) Draw();
+					else if (!gameObject.IsSelected()) Draw();
+					break;
 			}
 		}
 
@@ -89,7 +81,7 @@ namespace WIDVE.Utilities
 				 IconFilename, IconAllowScaling,
 				 TextureRect, Texture, TextureMaterial,
 				 TextureLeftBorder, TextureRightBorder, TextureTopBorder, TextureBottomBorder,
-				 Mesh, MeshPosition, MeshRotation);
+				 Mesh, MeshPosition, MeshRotation, MeshScale);
 		}
 
 		/// <summary>
@@ -106,7 +98,7 @@ namespace WIDVE.Utilities
 								Rect textureRect=new Rect(), Texture texture=null, Material textureMaterial=null,
 								int textureLeftBorder=0, int textureRightBorder = 0, int textureTopBorder = 0, int textureBottomBorder = 0,
 								//mesh
-								Mesh mesh=null, Vector3 meshPosition=new Vector3(), Vector3 meshRotation=new Vector3())
+								Mesh mesh=null, Vector3 meshPosition=new Vector3(), Vector3 meshRotation=new Vector3(), Vector3 meshScale=new Vector3())
 		{
 			Gizmos.matrix = parent.localToWorldMatrix;
 			Gizmos.color = color;
@@ -159,18 +151,23 @@ namespace WIDVE.Utilities
 				case Types.Mesh:
 					if (mesh != null)
 					{
-						Gizmos.DrawMesh(mesh, meshPosition, Quaternion.Euler(meshRotation), v_size);
+						Gizmos.DrawMesh(mesh, meshPosition, Quaternion.Euler(meshRotation), meshScale);
 					}
 					break;
 				case Types.WireMesh:
 					if (mesh != null)
 					{
-						Gizmos.DrawWireMesh(mesh, meshPosition, Quaternion.Euler(meshRotation), v_size);
+						Gizmos.DrawWireMesh(mesh, meshPosition, Quaternion.Euler(meshRotation), meshScale);
 					}
 					break;
 				default:
 					break;
 			}
+		}
+
+		void OnDrawGizmos()
+		{
+			DrawGizmo();
 		}
 
 #if UNITY_EDITOR
@@ -181,7 +178,7 @@ namespace WIDVE.Utilities
 			SerializedProperty Color;
 			SerializedProperty Size;
 			SerializedProperty UseWorldScale;
-			SerializedProperty DrawWhenSelected;
+			SerializedProperty DrawMode;
 			//line only
 			SerializedProperty LineStart;
 			SerializedProperty LineEnd;
@@ -205,6 +202,7 @@ namespace WIDVE.Utilities
 			SerializedProperty Mesh;
 			SerializedProperty MeshPosition;
 			SerializedProperty MeshRotation;
+			SerializedProperty MeshScale;
 
 			void OnEnable()
 			{
@@ -212,7 +210,7 @@ namespace WIDVE.Utilities
 				Color = serializedObject.FindProperty(nameof(Gizmo.Color));
 				Size = serializedObject.FindProperty(nameof(Gizmo.Size));
 				UseWorldScale = serializedObject.FindProperty(nameof(Gizmo.UseWorldScale));
-				DrawWhenSelected = serializedObject.FindProperty(nameof(Gizmo.DrawWhenSelected));
+				DrawMode = serializedObject.FindProperty(nameof(Gizmo.DrawMode));
 				//line
 				LineStart = serializedObject.FindProperty(nameof(Gizmo.LineStart));
 				LineEnd = serializedObject.FindProperty(nameof(Gizmo.LineEnd));
@@ -236,6 +234,7 @@ namespace WIDVE.Utilities
 				Mesh = serializedObject.FindProperty(nameof(Gizmo.Mesh));
 				MeshPosition = serializedObject.FindProperty(nameof(Gizmo.MeshPosition));
 				MeshRotation = serializedObject.FindProperty(nameof(Gizmo.MeshRotation));
+				MeshScale = serializedObject.FindProperty(nameof(Gizmo.MeshScale));
 			}
 
 			public override void OnInspectorGUI()
@@ -258,7 +257,7 @@ namespace WIDVE.Utilities
 				}
 
 				EditorGUILayout.PropertyField(UseWorldScale);
-				EditorGUILayout.PropertyField(DrawWhenSelected);
+				EditorGUILayout.PropertyField(DrawMode);
 
 				if (Type.enumValueIndex == (int)Types.Line)
 				{
@@ -296,6 +295,7 @@ namespace WIDVE.Utilities
 					EditorGUILayout.PropertyField(Mesh);
 					EditorGUILayout.PropertyField(MeshPosition);
 					EditorGUILayout.PropertyField(MeshRotation);
+					EditorGUILayout.PropertyField(MeshScale);
 				}
 
 				serializedObject.ApplyModifiedProperties();

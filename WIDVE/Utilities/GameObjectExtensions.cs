@@ -7,7 +7,7 @@ using UnityEditor.SceneManagement;
 using UnityEditor.Experimental.SceneManagement;
 #endif
 
-namespace WIDVE.Utilities.Extensions
+namespace WIDVE.Utilities
 {
 	public static class GameObjectExtensions
 	{

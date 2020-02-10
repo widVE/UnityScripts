@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace WIDVE.Utilities.Extensions
+namespace WIDVE.Utilities
 {
 	public static class TransformExtensions
 	{
