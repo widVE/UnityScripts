@@ -8,6 +8,9 @@ using UnityEditorInternal;
 
 namespace WIDVE.Utilities
 {
+	/// <summary>
+	/// Extend this class to draw a list of ScriptableObjects as a reorderable list.
+	/// </summary>
 	public abstract class ScriptableObjectList<T> : ScriptableObject where T : ScriptableObject
 	{
 		/// <summary>
