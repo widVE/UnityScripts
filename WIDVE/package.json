@@ -1,0 +1,10 @@
+{
+    "name": "com.widve.unityscripts",
+    "version": "1.0.0",
+    "displayName": "WIDVE Unity Scripts",
+    "description": "Various useful C# scripts for use in projects.",
+    "unity": "2019.2",
+    "dependencies": {
+      "com.unity.xr.oculus.standalone": "1.38.4"
+    }
+}
