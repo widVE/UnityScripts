@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0a6c0078e3fb6164dbb7a2133a59c20e, type: 3}
+  m_Script: {fileID: 11500000, guid: ef4c38d8846a7e24fbee55fd02e8ba97, type: 3}
   m_Name: LeftClick
   m_EditorClassIdentifier: 
   _smoothing:

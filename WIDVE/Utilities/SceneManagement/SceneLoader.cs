@@ -21,48 +21,61 @@ namespace WIDVE.Utilities
 		public enum LoadTimes { Manually, OnAwake, OnStart, OnFirstUpdate }
 
 		[SerializeField]
-		LoadTimes ScenesWillLoad = LoadTimes.Manually;
+		LoadTimes _scenesWillLoad = LoadTimes.Manually;
+		LoadTimes ScenesWillLoad => _scenesWillLoad;
 
 		/// <summary>
 		/// Returns true if scenes are loaded.
 		/// </summary>
 		bool Loaded = false;
+
 		[SerializeField]
-		LoadSceneMode Mode = LoadSceneMode.Additive;
-		[SerializeField][Tooltip("Scenes will load during play mode in builds. Set this to true to also load scenes during play mode in the editor.")]
-		bool LoadInEditor = false;
+		LoadSceneMode _mode = LoadSceneMode.Additive;
+		LoadSceneMode Mode => _mode;
+
+		[SerializeField]
+		[Tooltip("Scenes will load during play mode in builds. Check this to also load scenes during play mode in the editor.")]
+		bool _loadInEditor = false;
+		bool LoadInEditor => _loadInEditor;
+
+		[SerializeField]
+		[Tooltip("List of scenes to load.")]
+		SceneObjectList _scenes;
+		SceneObjectList Scenes => _scenes;
+
+		[SerializeField]
+		[Tooltip("[Optional] CommandHistory to store scene load actions.")]
+		CommandHistory _sceneLoadHistory;
+		CommandHistory SceneLoadHistory => _sceneLoadHistory;
+
+		/// <summary>
+		/// Returns true if scenes should be loaded, false otherwise.
+		/// </summary>
 		bool ShouldLoad
 		{
 			get
 			{
 				if (!enabled) return false;
-				if (!Application.IsPlaying(this)) return false;
+				if (!LoadInEditor && !Application.IsPlaying(this)) return false;
 				if (Application.isEditor && !LoadInEditor) return false;
 				return true;
 			}
 		}
-		[SerializeField][Tooltip("List of scenes to load.")]
-		SceneObjectList _scenes;
-		SceneObjectList Scenes => _scenes;
-		[SerializeField]
-		[Tooltip("Optional: CommandHistory to store scene load actions.")]
-		CommandHistory SceneLoadHistory;
 
 		/// <summary>
 		/// Load all scenes referenced by this SceneLoader.
 		/// </summary>
 		public void Load()
 		{
-			if (Scenes)
-			{
-				SceneObject.SceneObjectLoaded += CheckActiveSceneOnLoad;
-				Scenes.LoadAll(Mode, SceneLoadHistory);
-				Loaded = true;
-			}
-			else
+			if(!Scenes)
 			{
 				Debug.LogError($"Error! {name} can't load scenes; no SceneObjectList.");
+				return;
 			}
+
+			SceneObject.SceneObjectLoaded += CheckActiveSceneOnLoad;
+			Scenes.LoadAll(Mode, SceneLoadHistory);
+			Loaded = true;
 		}
 
 		/// <summary>
@@ -70,20 +83,23 @@ namespace WIDVE.Utilities
 		/// </summary>
 		public void Unload()
 		{
-			if (Scenes)
-			{
-				Scenes.UnloadAll(Mode, SceneLoadHistory);
-				Loaded = false;
-			}
-			else
+			if(!Scenes)
 			{
 				Debug.LogError($"Error! {name} can't unload scenes; no SceneObjectList.");
+				return;
 			}
+
+			Scenes.UnloadAll(Mode, SceneLoadHistory);
+			Loaded = false;
 		}
 
 		void CheckActiveSceneOnLoad(Scene scene, LoadSceneMode loadSceneMode)
 		{	//set the active scene if it was loaded
-			if(scene == Scenes[Scenes.ActiveScene].GetScene())
+			if(Scenes.ActiveScene == null)
+			{   //no active scene specified, so stop checking
+				SceneObject.SceneObjectLoaded -= CheckActiveSceneOnLoad;
+			}
+			else if(scene == Scenes.ActiveScene.GetScene())
 			{
 				SceneManager.SetActiveScene(scene);
 				//active scene has been set, so done checking
@@ -95,6 +111,7 @@ namespace WIDVE.Utilities
 		void Awake()
 		{
 			if (!ShouldLoad) return;
+
 			if (!Loaded && ScenesWillLoad == LoadTimes.OnAwake)
 			{
 				Load();
@@ -104,6 +121,7 @@ namespace WIDVE.Utilities
 		void Start()
 		{
 			if (!ShouldLoad) return;
+
 			if (!Loaded && ScenesWillLoad == LoadTimes.OnStart)
 			{
 				Load();
@@ -113,57 +131,42 @@ namespace WIDVE.Utilities
 		void Update()
 		{
 			if (!ShouldLoad) return;
+
 			if (!Loaded && ScenesWillLoad == LoadTimes.OnFirstUpdate)
 			{
 				Load();
 			}
+
 			//can sleep now
 			enabled = false;
 		}
 
 #if UNITY_EDITOR
+		[CanEditMultipleObjects]
 		[CustomEditor(typeof(SceneLoader))]
 		public class Editor : UnityEditor.Editor
 		{
-			SceneLoader Target;
-			SerializedProperty ScenesWillLoad;
-			SerializedProperty Mode;
-			SerializedProperty LoadInEditor;
-			SerializedProperty SceneLoadHistory;
-			SerializedProperty Scenes;
-
-			protected virtual void OnEnable()
-			{
-				Target = target as SceneLoader;
-
-				ScenesWillLoad = serializedObject.FindProperty(nameof(SceneLoader.ScenesWillLoad));
-				Mode = serializedObject.FindProperty(nameof(SceneLoader.Mode));
-				LoadInEditor = serializedObject.FindProperty(nameof(SceneLoader.LoadInEditor));
-				SceneLoadHistory = serializedObject.FindProperty(nameof(SceneLoader.SceneLoadHistory));
-				Scenes = serializedObject.FindProperty(nameof(SceneLoader._scenes));
-			}
-
 			public override void OnInspectorGUI()
 			{
-				serializedObject.Update();
+				base.OnInspectorGUI();
 
-				EditorGUILayout.PropertyField(ScenesWillLoad);
-				EditorGUILayout.PropertyField(Mode);
-				EditorGUILayout.PropertyField(LoadInEditor);
-				EditorGUILayout.PropertyField(Scenes);
-				EditorGUILayout.PropertyField(SceneLoadHistory);
-
-				//show load, unload buttons in Play mode
 				if (GUILayout.Button("Load"))
 				{
-					Target.Load();
-				}
-				if (GUILayout.Button("Unload"))
-				{
-					Target.Unload();
+					foreach(Object t in targets)
+					{
+						SceneLoader sl = t as SceneLoader;
+						sl.Load();
+					}
 				}
 
-				serializedObject.ApplyModifiedProperties();
+				if (GUILayout.Button("Unload"))
+				{
+					foreach(Object t in targets)
+					{
+						SceneLoader sl = t as SceneLoader;
+						sl.Unload();
+					}
+				}
 			}
 		}
 #endif

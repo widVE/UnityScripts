@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 287508f137e66a948937588c900dfbf5, type: 3}
+  m_Script: {fileID: 11500000, guid: ff0fd1451aa57b34d8caeaa4e304301b, type: 3}
   m_Name: RightThumbstick
   m_EditorClassIdentifier: 
   _smoothing:

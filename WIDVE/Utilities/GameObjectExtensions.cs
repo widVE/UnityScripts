@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -12,38 +13,12 @@ namespace WIDVE.Utilities
 	public static class GameObjectExtensions
 	{
 		/// <summary>
-		/// Returns true if this GameObject exists in a Scene.
-		/// <para>Use this to distinguish between e.g. regular GameObjects and Prefab Asset GameObjects.</para>
-		/// </summary>
-		public static bool ExistsInScene(this GameObject gameObject)
-		{
-			bool inScene;
-			GameObjectEnvironments environment = gameObject.GetGameObjectEnvironment();
-			switch (environment)
-			{
-				default:
-				case GameObjectEnvironments.Scene:
-				case GameObjectEnvironments.PrefabInstance:
-					inScene = true;
-					break;
-				case GameObjectEnvironments.PrefabAsset:
-				case GameObjectEnvironments.PrefabStage:
-				case GameObjectEnvironments.NestedPrefabStage:
-				case GameObjectEnvironments.PrefabImport:
-				case GameObjectEnvironments.PreviewScene:
-					inScene = false;
-					break;
-			}
-			return inScene;
-		}
-
-		/// <summary>
 		/// Environments that GameObjects can exist in.
 		/// </summary>
 		public enum GameObjectEnvironments { Unknown, PrefabAsset, PrefabStage, NestedPrefabStage, PrefabInstance, Scene, PrefabImport, PreviewScene }
 
 		/// <summary>
-		/// Return the environment this GameObject is contained in.
+		/// Returns the environment this GameObject exists in.
 		/// </summary>
 		public static GameObjectEnvironments GetGameObjectEnvironment(this GameObject gameObject)
 		{   //https://github.com/Unity-Technologies/PrefabAPIExamples/blob/master/Assets/Scripts/GameObjectTypeLogging.cs
@@ -109,10 +84,36 @@ namespace WIDVE.Utilities
 #endif
 			return environment;
 		}
+		
+		/// <summary>
+		/// Returns true if this GameObject exists in a Scene.
+		/// <para>Use this to distinguish between e.g. regular GameObjects and Prefab Asset GameObjects.</para>
+		/// </summary>
+		public static bool ExistsInScene(this GameObject gameObject)
+		{
+			bool inScene;
+			GameObjectEnvironments environment = gameObject.GetGameObjectEnvironment();
+			switch (environment)
+			{
+				default:
+				case GameObjectEnvironments.Scene:
+				case GameObjectEnvironments.PrefabInstance:
+					inScene = true;
+					break;
+				case GameObjectEnvironments.PrefabAsset:
+				case GameObjectEnvironments.PrefabStage:
+				case GameObjectEnvironments.NestedPrefabStage:
+				case GameObjectEnvironments.PrefabImport:
+				case GameObjectEnvironments.PreviewScene:
+					inScene = false;
+					break;
+			}
+			return inScene;
+		}
 
 		/// <summary>
 		/// Returns true if this GameObject or any of its parent objects are currently selected in the Editor.
-		/// <para>Returns false when not in Edit mode.</para>
+		/// <para>Returns false outside the Editor.</para>
 		/// </summary>
 		public static bool IsSelected(this GameObject gameObject)
 		{
@@ -132,8 +133,8 @@ namespace WIDVE.Utilities
 		}
 
 		/// <summary>
-		/// Returns true if this GameObject is part of the current top-level selection in Editor.
-		/// <para>Returns false outside Editor.</para>
+		/// Returns true if this GameObject is part of the current top-level selection in the Editor.
+		/// <para>Returns false outside the Editor.</para>
 		/// </summary>
 		public static bool IsTopLevelSelection(this GameObject gameObject)
 		{
@@ -153,35 +154,65 @@ namespace WIDVE.Utilities
 		}
 
 		/// <summary>
-		/// In Edit mode, mark the scene containing this GameObject as dirty.
+		/// In Edit mode, marks the scene containing this GameObject as dirty.
+		/// <para>In Prefab mode, marks the prefab asset containing this GameObject as dirty.</para>
 		/// <para>In Play mode, does nothing.</para>
 		/// </summary>
-		public static void MarkDirty(this GameObject gameObject, bool force=false)
+		public static bool MarkDirty(this GameObject gameObject)
 		{
 #if UNITY_EDITOR
-			if (Application.isPlaying) return;
-			if (!force && !gameObject.ExistsInScene()) return;
-			EditorSceneManager.MarkSceneDirty(gameObject.scene);
+			if (Application.isPlaying) return false;
+
+			GameObjectEnvironments environment = gameObject.GetGameObjectEnvironment();
+			switch(environment)
+			{
+				//if the GameObject is being edited as part of a Scene:
+				case GameObjectEnvironments.Scene:
+				case GameObjectEnvironments.PrefabInstance:
+					//mark the scene containing this GameObject as dirty
+					EditorSceneManager.MarkSceneDirty(gameObject.scene);
+					return true;
+
+				//if the GameObject is being edited as part of a Prefab:
+				case GameObjectEnvironments.PrefabStage:
+				case GameObjectEnvironments.NestedPrefabStage:
+					//mark the Prefab containing this GameObject as dirty
+					//do this by using the currently open PrefabStage scene
+					PrefabStage prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+					if(prefabStage != null)
+					{
+						EditorSceneManager.MarkSceneDirty(prefabStage.scene);
+						return true;
+					}
+					else return false;
+
+				//do nothing if the GameObject is from some other environment
+				case GameObjectEnvironments.PrefabAsset:
+				case GameObjectEnvironments.PrefabImport:
+				case GameObjectEnvironments.PreviewScene:
+				default:
+					return false;
+			}
 #endif
 		}
 
 		/// <summary>
-		/// Instantiate a prefab as a child of this GameObject.
+		/// Instantiates a new prefab instance as a child of this GameObject.
 		/// </summary>
-		/// <param name="keepPrefabConnection">When true, keep prefab connection in edit mode.</param>
+		/// <param name="keepPrefabConnection">When true, keeps prefab connection (only used in Edit mode).</param>
 		public static Object InstantiatePrefab(this GameObject gameObject, Object prefab, bool keepPrefabConnection = true, bool keepPrefabTransform = false)
 		{
 			Object instance = null;
 			if (!keepPrefabConnection || Application.isPlaying)
-			{
+			{	//instantiate the object without a prefab connection
 				instance = Object.Instantiate(original: prefab, parent: gameObject.transform);			
 			}
-			else
-			{
 #if UNITY_EDITOR
+			else
+			{	//instantiate the object and keep the prefab connection
 				instance = PrefabUtility.InstantiatePrefab(assetComponentOrGameObject: prefab, parent: gameObject.transform);
-#endif
 			}
+#endif
 			if (keepPrefabTransform && instance != null)
 			{	//keep same world position, rotation, and scale as original prefab
 				Transform prefabTransform = (prefab as GameObject).transform;
