@@ -11,13 +11,9 @@ namespace WIDVE.Utilities
 		KeyCode _key;
 		public KeyCode Key => _key;
 
-		public event System.Action OnKeyDown;
-		public event System.Action OnKeyUp;
-
-		public override void UpdateInput()
+		public MKBButton(KeyCode key)
 		{
-			if (Input.GetKeyDown(Key)) OnKeyDown?.Invoke();
-			if (Input.GetKeyUp(Key)) OnKeyUp?.Invoke();
+			_key = key;
 		}
 
 		public override float GetRawValue()
@@ -25,8 +21,19 @@ namespace WIDVE.Utilities
 			return Input.GetKey(Key) ? 1f : 0f;
 		}
 
-		public override bool GetHeld() { return Input.GetKey(Key); }
-		public override bool GetUp() { return Input.GetKeyUp(Key); }
-		public override bool GetDown() { return Input.GetKeyDown(Key); }
+		public override bool GetHeld()
+		{
+			return Input.GetKey(Key); 
+		}
+
+		public override bool GetUp()
+		{
+			return Input.GetKeyUp(Key);
+		}
+
+		public override bool GetDown()
+		{
+			return Input.GetKeyDown(Key);
+		}
 	}
 }

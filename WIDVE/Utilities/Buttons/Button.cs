@@ -17,7 +17,7 @@ namespace WIDVE.Utilities
 		[SerializeField]
 		[Range(-1f, 1f)]
 		float _multiplier = 1f;
-		protected float Multiplier => _multiplier;
+		public float Multiplier => _multiplier;
 
 		[SerializeField]
 		bool _active = true;
