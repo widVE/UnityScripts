@@ -1,4 +1,4 @@
-﻿namespace WIDVE.Patterns.States
+﻿namespace WIDVE.Patterns
 {
 	public abstract class State
 	{
@@ -36,7 +36,7 @@
 	public sealed class IdleState : State { }
 
 	/// <summary>
-	/// State linked to a specific object.
+	/// State attached to a specific object.
 	/// </summary>
 	/// <typeparam name="T">Type of the object this state is linked to.</typeparam>
 	public abstract class State<T> : State

@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-using WIDVE.Patterns.Commands;
+using WIDVE.Patterns;
 
 namespace WIDVE.Utilities
 {

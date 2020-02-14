@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace WIDVE.Patterns.States
+namespace WIDVE.Patterns
 {
 	/// <summary>
 	/// Interface for classes that use a state machine.
@@ -85,28 +85,6 @@ namespace WIDVE.Patterns.States
 		{
 			StateChanged?.Invoke(state);
 		}
-
-		/// <summary>
-		/// Return true if CurrentState is of the given type.
-		/// <para>Prefer to use C# pattern matching instead... it's simpler.</para>
-		/// </summary>
-		/// <param name="stateType">Type of state to check against.</param>
-		/// <returns>True if CurrentState's type matches stateType.</returns>
-		public bool StateIsType(System.Type stateType)
-		{
-			return StateIsType(CurrentState, stateType);
-		}
-
-		/// <summary>
-		/// Return true if the given state is of the given type.
-		/// </summary>
-		/// <param name="testState">State object to test.</param>
-		/// <param name="testType">State type to test against.</param>
-		/// <returns>True if types match.</returns>
-		public static bool StateIsType(State testState, System.Type testType)
-		{
-			return testState.GetType() == testType;
-		}
 	}
 
 	/// <summary>
@@ -122,6 +100,7 @@ namespace WIDVE.Patterns.States
 		}
 
 		public FiniteStateMachine() : base() { }
+
 		public FiniteStateMachine(State initialState) : base(initialState) { }
 
 		public override void SetState(State newState, bool forceChange=false)
@@ -129,11 +108,15 @@ namespace WIDVE.Patterns.States
 			if (forceChange || CurrentState != newState)
 			{
 				string currentStateName = CurrentState == null ? "null state" : CurrentState.GetType().Name;
+
 				if (DebugPrint) Debug.Log("Exiting " + currentStateName);
 				CurrentState?.Exit();
+
 				CurrentState = newState;
+
 				if (DebugPrint) Debug.Log("Entering " + CurrentState.GetType().Name);
 				CurrentState?.Enter();
+
 				//invoke StateChanged *after* new state has finished entering
 				InvokeStateChanged(CurrentState);
 			}
@@ -182,8 +165,11 @@ namespace WIDVE.Patterns.States
 			if (forceChange || CurrentState != newState)
 			{
 				CurrentState?.Exit();
+
 				StateStack.Push(newState);
+
 				CurrentState?.Enter();
+
 				InvokeStateChanged(CurrentState);
 			}
 		}
@@ -198,9 +184,11 @@ namespace WIDVE.Patterns.States
 		{	//pop the current state from the stack and return to the previous state
 			State poppedState = null;
 			if(!AtBaseState)
-			{   //pop the current state and exit
+			{  
+				//pop the current state and exit
 				poppedState = StateStack.Pop();
 				poppedState?.Exit();
+
 				if (finalPop != null)
 				{   //pop all the intervening states until also popping the final state
 					while (!AtBaseState && poppedState != finalPop)
@@ -208,8 +196,10 @@ namespace WIDVE.Patterns.States
 						poppedState = StateStack.Pop();
 					}
 				}
+
 				//enter the new current state
 				CurrentState?.Enter();
+
 				InvokeStateChanged(CurrentState);
 			}
 			return poppedState;

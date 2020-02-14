@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using WIDVE.Utilities;
 
-namespace WIDVE.Patterns.Commands
+namespace WIDVE.Patterns
 {
 	[CreateAssetMenu(fileName = nameof(CommandHistory), menuName = nameof(Patterns) + "/" + nameof(CommandHistory), order = WIDVEEditor.C_ORDER)]
 	public class CommandHistory : ScriptableObject
@@ -19,20 +19,21 @@ namespace WIDVE.Patterns.Commands
 			set => _recording = value;
 		}
 
-		[SerializeField][Tooltip("Print when commands are executed/undone")]
+		[SerializeField]
+		[Tooltip("Print when commands are executed/undone?")]
 		bool PrintToConsole = false;
 
-		Stack<ICommand> _undoHistory;
+		Stack<ICommand> _undos;
 		/// <summary>
 		/// Stores commands that have been undone.
 		/// </summary>
-		Stack<ICommand> UndoHistory => _undoHistory ?? (_undoHistory = new Stack<ICommand>());
+		Stack<ICommand> Undos => _undos ?? (_undos = new Stack<ICommand>());
 
-		Stack<ICommand> _redoHistory;
+		Stack<ICommand> _redos;
 		/// <summary>
 		/// Stores commands that have been redone.
 		/// </summary>
-		Stack<ICommand> RedoHistory => _redoHistory ?? (_redoHistory = new Stack<ICommand>());
+		Stack<ICommand> Redos => _redos ?? (_redos = new Stack<ICommand>());
 
 		/// <summary>
 		/// Add the given command to the undo history.
@@ -41,10 +42,10 @@ namespace WIDVE.Patterns.Commands
 		/// <param name="clearRedoHistory">Clear current redo history.</param>
 		public void Record(ICommand command, bool clearRedoHistory=true)
 		{
-			UndoHistory.Push(command);
-			if(clearRedoHistory && RedoHistory.Count > 0)
+			Undos.Push(command);
+			if(clearRedoHistory && Redos.Count > 0)
 			{	//all current redos are now invalid
-				RedoHistory.Clear();
+				Redos.Clear();
 			}
 		}
 
@@ -85,14 +86,14 @@ namespace WIDVE.Patterns.Commands
 		public ICommand Undo()
 		{
 			ICommand command = null;
-			if(UndoHistory.Count > 0)
+			if(Undos.Count > 0)
 			{
-				command = UndoHistory.Pop();
+				command = Undos.Pop();
 				if (command != null)
 				{
 					if (PrintToConsole) Debug.Log($"Undoing {command.Name} command.");
 					command.Undo();
-					RedoHistory.Push(command);
+					Redos.Push(command);
 				}
 				else
 				{
@@ -109,14 +110,14 @@ namespace WIDVE.Patterns.Commands
 		public ICommand Redo()
 		{
 			ICommand command = null;
-			if(RedoHistory.Count > 0)
+			if(Redos.Count > 0)
 			{
-				command = RedoHistory.Pop();
+				command = Redos.Pop();
 				if(command != null)
 				{
 					if (PrintToConsole) Debug.Log($"Redoing {command.Name} command...");
 					command.Execute();
-					UndoHistory.Push(command);
+					Undos.Push(command);
 				}
 				else
 				{
@@ -133,7 +134,7 @@ namespace WIDVE.Patterns.Commands
 		public int UndoAll()
 		{
 			int commandsUndone = 0;
-			while(UndoHistory.Count > 0)
+			while(Undos.Count > 0)
 			{
 				ICommand command = Undo();
 				if(command != null)
@@ -151,7 +152,7 @@ namespace WIDVE.Patterns.Commands
 		public int RedoAll()
 		{
 			int commandsRedone = 0;
-			while(RedoHistory.Count > 0)
+			while(Redos.Count > 0)
 			{
 				ICommand command = Redo();
 				if(command != null)
@@ -166,10 +167,10 @@ namespace WIDVE.Patterns.Commands
 		/// Clear all undo entries.
 		/// </summary>
 		/// <returns>Number of commands cleared.</returns>
-		public int ClearUndoHistory()
+		public int ClearUndos()
 		{
-			int entriesCleared = UndoHistory.Count;
-			UndoHistory.Clear();
+			int entriesCleared = Undos.Count;
+			Undos.Clear();
 			return entriesCleared;
 		}
 
@@ -177,10 +178,10 @@ namespace WIDVE.Patterns.Commands
 		/// Clear all redo entries.
 		/// </summary>
 		/// <returns>Number of commands cleared.</returns>
-		public int ClearRedoHistory()
+		public int ClearRedos()
 		{
-			int entriesCleared = RedoHistory.Count;
-			RedoHistory.Clear();
+			int entriesCleared = Redos.Count;
+			Redos.Clear();
 			return entriesCleared;
 		}
 
@@ -188,11 +189,11 @@ namespace WIDVE.Patterns.Commands
 		/// Clear all undo and redo entries. 
 		/// </summary>
 		/// <returns>Number of entries cleared.</returns>
-		public int ClearHistory()
+		public int Clear()
 		{
 			int entriesCleared = 0;
-			entriesCleared += ClearUndoHistory();
-			entriesCleared += ClearRedoHistory();
+			entriesCleared += ClearUndos();
+			entriesCleared += ClearRedos();
 			return entriesCleared;
 		}
 	}
