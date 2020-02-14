@@ -9,7 +9,11 @@ namespace WIDVE.Utilities
 	{
 		[SerializeField]
 		OVRInput.RawAxis2D _ovrAxis;
-		public OVRInput.RawAxis2D OVRAxis => _ovrAxis;
+		public OVRInput.RawAxis2D OVRAxis
+		{
+			get => _ovrAxis;
+			set => _ovrAxis = value;
+		}
 
 		public override Vector2 GetRawValue()
 		{

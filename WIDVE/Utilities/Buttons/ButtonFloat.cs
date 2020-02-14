@@ -21,7 +21,9 @@ namespace WIDVE.Utilities
 		}
 
 		public virtual bool GetHeld() { return false; }
+
 		public virtual bool GetDown() { return false; }
+
 		public virtual bool GetUp() { return false; }
 	}
 }

@@ -8,16 +8,28 @@ namespace WIDVE.Utilities
 	public abstract class Button : ScriptableObject
 	{
 		protected const string MENU_NAME = "Button";
+
 		protected const int MENU_ORDER = 2000;
 
 		[SerializeField]
 		AnimationCurve _smoothing = AnimationCurve.EaseInOut(0, 0, 1, 1);
-		protected AnimationCurve Smoothing => _smoothing;
+		public AnimationCurve Smoothing
+		{
+			get => _smoothing;
+			set => _smoothing = value;
+		}
 
 		[SerializeField]
 		[Range(-1f, 1f)]
 		float _multiplier = 1f;
-		public float Multiplier => _multiplier;
+		/// <summary>
+		/// The button's Value will be multiplied by this amount.
+		/// </summary>
+		public float Multiplier
+		{
+			get => _multiplier;
+			set => _multiplier = value;
+		}
 
 		[SerializeField]
 		bool _active = true;

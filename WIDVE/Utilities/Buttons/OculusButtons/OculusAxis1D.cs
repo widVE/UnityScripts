@@ -9,7 +9,11 @@ namespace WIDVE.Utilities
 	{
 		[SerializeField]
 		OVRInput.RawAxis1D _ovrAxis;
-		public OVRInput.RawAxis1D OVRAxis => _ovrAxis;
+		public OVRInput.RawAxis1D OVRAxis
+		{
+			get => _ovrAxis;
+			set => _ovrAxis = value;
+		}
 
 		public override float GetRawValue()
 		{

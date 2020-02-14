@@ -5,7 +5,7 @@ using WIDVE.Utilities;
 
 namespace WIDVE.Patterns.Commands
 {
-	[CreateAssetMenu(fileName = nameof(CommandHistory), menuName = nameof(Patterns) + "/" + nameof(CommandHistory), order = UtilitiesEditor.ORDER)]
+	[CreateAssetMenu(fileName = nameof(CommandHistory), menuName = nameof(Patterns) + "/" + nameof(CommandHistory), order = WIDVEEditor.C_ORDER)]
 	public class CommandHistory : ScriptableObject
 	{
 		[SerializeField]

@@ -14,7 +14,7 @@ namespace WIDVE.Utilities
 	/// <summary>
 	/// ScriptableObject class to store Scene data persistently, in the editor and in builds.
 	/// </summary>
-	[CreateAssetMenu(fileName ="SceneObject", menuName = nameof(Utilities) + "/SceneObject", order = UtilitiesEditor.ORDER)]
+	[CreateAssetMenu(fileName ="SceneObject", menuName = nameof(Utilities) + "/SceneObject", order = WIDVEEditor.C_ORDER)]
 	public class SceneObject : ScriptableObject
 #if UNITY_EDITOR
 							 , ISerializationCallbackReceiver

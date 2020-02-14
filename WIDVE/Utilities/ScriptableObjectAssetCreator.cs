@@ -9,12 +9,14 @@ using UnityEditor;
 namespace WIDVE.Utilities
 {
 	/// <summary>
-	/// Creates new ScriptableObject Assets in the Editor.
+	/// [Editor only] Creates ScriptableObject assets.
 	/// </summary>
 	public static class ScriptableObjectAssetCreator
 	{
-		static string AssetsFolderPath = "Assets";
-		static string AssetExtension = ".asset";
+#if UNITY_EDITOR
+		public const string ASSETS_FOLDER = "Assets";
+
+		public const string EXTENSION = ".asset";
 
 		/// <summary>
 		/// Creates and returns a new ScriptableObject as an asset.
@@ -47,35 +49,32 @@ namespace WIDVE.Utilities
 		public static string SaveToAsset(ScriptableObject scriptableObject, string folder, string filename = null, bool saveAndRefresh = true, bool focus = false)
 		{
 			//generate the filepath for the saved asset
-			if(string.IsNullOrEmpty(folder)) folder = AssetsFolderPath;
+			if(string.IsNullOrEmpty(folder)) folder = ASSETS_FOLDER;
+			if(!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 			if(string.IsNullOrEmpty(filename)) filename = scriptableObject.name;
-			if(!filename.EndsWith(AssetExtension)) filename += AssetExtension;
+			if(!filename.EndsWith(EXTENSION)) filename += EXTENSION;
 			string assetPath = AssetDatabase.GenerateUniqueAssetPath(Path.Combine(folder, filename));
-
+			
 			//create the asset
 			AssetDatabase.CreateAsset(scriptableObject, assetPath);
 
 			//optional: save and refresh after creating the asset
 			if(saveAndRefresh)
 			{
-				SaveAndRefresh();
+				AssetDatabase.SaveAssets();
+				AssetDatabase.Refresh();
 
 				//optional: after saving, focus on the newly created asset
-				EditorUtility.FocusProjectWindow();
-				Selection.activeObject = scriptableObject;
+				if(focus)
+				{
+					EditorUtility.FocusProjectWindow();
+					Selection.activeObject = scriptableObject;
+				}
 			}
 
 			//return the path to the newly created asset
 			return AssetDatabase.GetAssetPath(scriptableObject);
 		}
-
-		/// <summary>
-		/// Saves and refreshes the AssetDatabase.
-		/// </summary>
-		public static void SaveAndRefresh()
-		{
-			AssetDatabase.SaveAssets();
-			AssetDatabase.Refresh();
-		}
+#endif
 	}
 }

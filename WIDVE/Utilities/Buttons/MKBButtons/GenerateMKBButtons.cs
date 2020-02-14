@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -10,7 +11,7 @@ namespace WIDVE.Utilities
 	static class GenerateMKBButtons
 	{
 #if UNITY_EDITOR
-		static string ButtonsFolder = "WIDVE/MKBButtons";
+		const string BUTTONS_FOLDER = WIDVEEditor.FOLDER + "/MKBButtons";
 
 		static Dictionary<KeyCode, string> DefaultButtons = new Dictionary<KeyCode, string>
 		{
@@ -37,7 +38,7 @@ namespace WIDVE.Utilities
 			{ KeyCode.Mouse2, "Middle Click" }
 		};
 
-		[MenuItem("WIDVE/Generate Mouse and Keyboard Buttons")]
+		[MenuItem(WIDVEEditor.MENU + "/Generate Mouse and Keyboard Buttons")]
 		static void Generate()
 		{
 			int buttonsCreated = 0;
@@ -45,19 +46,25 @@ namespace WIDVE.Utilities
 			foreach(KeyValuePair<KeyCode, string> defaultButton in DefaultButtons)
 			{
 				//create a new ScriptableObject for this button
-				MKBButton button = new MKBButton(defaultButton.Key);
+				MKBButton button = ScriptableObject.CreateInstance<MKBButton>();
+				button.Key = defaultButton.Key;
 				button.name = defaultButton.Value;
 
-				//save the button as an asset
-				ScriptableObjectAssetCreator.SaveToAsset(button, ButtonsFolder);
-
-				buttonsCreated++;
+				//check that the button does not already exist
+				string buttonPath = Path.Combine(BUTTONS_FOLDER, button.name + ScriptableObjectAssetCreator.EXTENSION);
+				if(AssetDatabase.GetMainAssetTypeAtPath(buttonPath) == null)
+				{
+					//save the button as an asset
+					ScriptableObjectAssetCreator.SaveToAsset(button, BUTTONS_FOLDER, saveAndRefresh: false);
+					buttonsCreated++;
+				}
 			}
 
 			//save and refresh the AssetDatabase when done creating all buttons
-			ScriptableObjectAssetCreator.SaveAndRefresh();
+			AssetDatabase.SaveAssets();
+			AssetDatabase.Refresh();
 
-			Debug.Log($"Created {buttonsCreated} MKBButtons in {ButtonsFolder}");
+			Debug.Log($"Created {buttonsCreated} MKBButtons in {BUTTONS_FOLDER}");
 		}
 #endif
 	}

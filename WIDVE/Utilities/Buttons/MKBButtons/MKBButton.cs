@@ -9,11 +9,10 @@ namespace WIDVE.Utilities
 	{
 		[SerializeField]
 		KeyCode _key;
-		public KeyCode Key => _key;
-
-		public MKBButton(KeyCode key)
+		public KeyCode Key
 		{
-			_key = key;
+			get => _key;
+			set => _key = value;
 		}
 
 		public override float GetRawValue()

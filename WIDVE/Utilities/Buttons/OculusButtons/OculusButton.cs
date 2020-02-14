@@ -9,15 +9,10 @@ namespace WIDVE.Utilities
 	{
 		[SerializeField]
 		OVRInput.RawButton _ovrButton;
-		public OVRInput.RawButton OVRButton => _ovrButton;
-
-		public event System.Action OnButtonDown;
-		public event System.Action OnButtonUp;
-
-		public override void UpdateInput()
+		public OVRInput.RawButton OVRButton
 		{
-			if (GetDown()) OnButtonDown?.Invoke();
-			if (GetUp()) OnButtonUp?.Invoke();
+			get => _ovrButton;
+			set => _ovrButton = value;
 		}
 
 		public override float GetRawValue()

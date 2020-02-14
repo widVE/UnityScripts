@@ -9,7 +9,7 @@ using WIDVE.Patterns.Commands;
 
 namespace WIDVE.Utilities
 {
-	[CreateAssetMenu(fileName = nameof(SceneObjectList), menuName = nameof(Utilities) + "/" + nameof(SceneObjectList), order = UtilitiesEditor.ORDER)]
+	[CreateAssetMenu(fileName = nameof(SceneObjectList), menuName = nameof(Utilities) + "/" + nameof(SceneObjectList), order = WIDVEEditor.C_ORDER)]
 	public class SceneObjectList : ScriptableObjectList<SceneObject>
 	{
 		[SerializeField]
