@@ -193,6 +193,9 @@ namespace WIDVE.Utilities
 				default:
 					return false;
 			}
+#else
+			//do nothing outside editor
+			return false;
 #endif
 		}
 
