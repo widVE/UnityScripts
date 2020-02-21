@@ -11,6 +11,7 @@ namespace WIDVE.Graphics
 	[CreateAssetMenu(fileName = nameof(ShaderProperties), menuName = nameof(WIDVE.Graphics) + "/" + nameof(ShaderProperties), order = 1500)]
 	public class ShaderProperties : ScriptableObject
 	{
+		#region ShaderProperty classes
 		[System.Serializable]
 		public abstract class ShaderProperty
 		{
@@ -112,7 +113,8 @@ namespace WIDVE.Graphics
 			}
 
 			public override float Lerp(Material m1, Material m2, float t)
-			{   //don't try to lerp enums - just return the value from material a
+			{
+				//don't try to lerp enums - just return the value from material a
 				if(IsEnum) return Get(m1);
 				else return Mathf.Lerp(Get(m1), Get(m2), t);
 			}
@@ -155,16 +157,21 @@ namespace WIDVE.Graphics
 			}
 
 			public override Texture Lerp(Material a, Material b, float t)
-			{   //texture lerping not yet implemented
+			{
+				//texture lerping not yet implemented
 				throw new System.NotImplementedException();
 			}
 		}
+		#endregion
+
 		const bool USE_TEXTURES = false;
 
+		//shader to use
 		[SerializeField]
 		Shader _sourceShader;
 		public Shader SourceShader => _sourceShader;
 
+		//all the properties...
 		[SerializeField]
 		List<ColorProperty> _colorProperties;
 		public List<ColorProperty> ColorProperties => _colorProperties ?? (_colorProperties = new List<ColorProperty>());
@@ -196,8 +203,10 @@ namespace WIDVE.Graphics
 #if UNITY_EDITOR
 			//open shader file to read attributes (necessary for enum checking)
 			string shaderPath = AssetDatabase.GetAssetPath(shader);
+
 			using(StreamReader sr = new StreamReader(shaderPath))
-			{   //reset property lists
+			{
+				//reset property lists
 				ColorProperties.Clear();
 				FloatProperties.Clear();
 				VectorProperties.Clear();
@@ -208,6 +217,7 @@ namespace WIDVE.Graphics
 				{
 					ShaderUtil.ShaderPropertyType type = ShaderUtil.GetPropertyType(shader, i);
 					string name = ShaderUtil.GetPropertyName(shader, i);
+
 					switch(type)
 					{
 						case ShaderUtil.ShaderPropertyType.Color:
@@ -220,13 +230,16 @@ namespace WIDVE.Graphics
 							bool isEnum = false;
 							string line;
 							while((line = sr.ReadLine()) != null)
-							{	//check all lines with attributes
+							{
+								//check all lines with attributes
 								line = line.Trim(); //remove whitespace from start and end
 								if(line.StartsWith("//")) continue; //skip comments
 								if(line.StartsWith("["))
-								{   //does this line declare the shader variable?
+								{  
+									//does this line declare the shader variable?
 									if(line.Contains(name))
-									{   //check if it has an enum attribute
+									{
+										//check if it has an enum attribute
 										if(line.StartsWith("[Enum") || line.StartsWith("[Toggle"))
 										{
 											isEnum = true;
@@ -237,18 +250,23 @@ namespace WIDVE.Graphics
 									//could add an additional check for an attribute by itself, on the line above the property...
 								}
 							}
+
 							//return to start of file
 							sr.DiscardBufferedData();
 							sr.BaseStream.Seek(0, SeekOrigin.Begin);
+
 							//now can add the property
 							FloatProperties.Add(new FloatProperty(name, shader, isEnum));
 							break;
+
 						case ShaderUtil.ShaderPropertyType.Vector:
 							VectorProperties.Add(new VectorProperty(name, shader));
 							break;
+
 						case ShaderUtil.ShaderPropertyType.TexEnv:
 							TextureProperties.Add(new TextureProperty(name, shader));
 							break;
+
 						default:
 							Debug.Log($"Unsupported shader property '{name}' (type: {type})");
 							break;
@@ -267,9 +285,11 @@ namespace WIDVE.Graphics
 		/// <param name="src">Material to get enum values from.</param>
 		/// <param name="dst">Material that will have its enum values changed.</param>
 		public void SetRenderModes(Material src, Material dst)
-		{   //need this because MaterialPropertyBlocks don't affect rendering settings (Cull, Zwrite, etc)
+		{
+			//need this because MaterialPropertyBlocks don't affect rendering settings (Cull, Zwrite, etc)
 			for(int i = 0; i < FloatProperties.Count; i++)
-			{	//set all float properties that represent enums
+			{
+				//set all float properties that represent enums
 				FloatProperty fp = FloatProperties[i];
 				if(fp.IsEnum) fp.Set(dst, fp.Get(src));
 			}
@@ -278,7 +298,7 @@ namespace WIDVE.Graphics
 		}
 
 		/// <summary>
-		/// Sets the given MaterialPropertyBlock to have all properties from the given Material.
+		/// Sets the MaterialPropertyBlock to have all properties from the given Material.
 		/// </summary>
 		public void SetPropertyBlock(MaterialPropertyBlock mpb, Material m)
 		{
@@ -314,7 +334,8 @@ namespace WIDVE.Graphics
 		/// Sets the MaterialPropertyBlock to have the lerp of all properties between Materials a and b, at time t.
 		/// </summary>
 		public void LerpPropertyBlock(MaterialPropertyBlock mpb, Material a, Material b, float t)
-		{	//lerp all properties of each type
+		{
+			//lerp all properties of each type
 			for(int i = 0; i < ColorProperties.Count; i++)
 			{
 				ColorProperty cp = ColorProperties[i];
@@ -334,7 +355,8 @@ namespace WIDVE.Graphics
 			}
 
 			if(USE_TEXTURES)
-			{	//currently unsupported...
+			{
+				//currently unsupported...
 				for(int i = 0; i < TextureProperties.Count; i++)
 				{
 					TextureProperty tp = TextureProperties[i];
@@ -352,9 +374,9 @@ namespace WIDVE.Graphics
 			{
 				if(GUILayout.Button("Set Properties"))
 				{
-					foreach(Object t in targets)
+					foreach(ShaderProperties sp in targets)
 					{
-						(t as ShaderProperties).SetPropertiesFromShader();
+						sp.SetPropertiesFromShader();
 					}
 				}
 

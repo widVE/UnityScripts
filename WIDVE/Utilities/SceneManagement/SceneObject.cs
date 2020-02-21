@@ -14,7 +14,7 @@ namespace WIDVE.Utilities
 	/// <summary>
 	/// ScriptableObject class to store Scene data persistently, in the editor and in builds.
 	/// </summary>
-	[CreateAssetMenu(fileName ="SceneObject", menuName = nameof(Utilities) + "/SceneObject", order = WIDVEEditor.C_ORDER)]
+	[CreateAssetMenu(fileName = nameof(SceneObject), menuName = nameof(Utilities) + "/" + nameof(SceneObject), order = WIDVEEditor.C_ORDER)]
 	public class SceneObject : ScriptableObject
 #if UNITY_EDITOR
 							 , ISerializationCallbackReceiver
@@ -23,7 +23,8 @@ namespace WIDVE.Utilities
 #if UNITY_EDITOR
 		//SceneAssets only exist in the Editor
 		[SerializeField]
-		SceneAsset Scene; //set in Inspector
+		SceneAsset _scene;
+		SceneAsset Scene => _scene;
 #endif
 
 		[SerializeField]
@@ -78,15 +79,18 @@ namespace WIDVE.Utilities
 		/// Invoked whenever a SceneObject has been opened in the hierarchy.
 		/// </summary>
 		public static event UnityAction<Scene, OpenSceneMode> SceneObjectOpened;
+
 		/// <summary>
 		/// Invoked whenever a SceneObject has been closed in the hierarchy.
 		/// </summary>
 		public static event UnityAction<Scene> SceneObjectClosed;
 #endif
+
 		/// <summary>
 		/// Invoked whenever a SceneObject has finished loading a Scene.
 		/// </summary>
 		public static event UnityAction<Scene, LoadSceneMode> SceneObjectLoaded;
+
 		/// <summary>
 		/// Invoked whenever a SceneObject has finished unloading a Scene.
 		/// </summary>
@@ -118,8 +122,9 @@ namespace WIDVE.Utilities
 #if UNITY_EDITOR
 			return EditorSceneManager.GetSceneByPath(ScenePath);
 #endif
-			//not sure why, but buildIndex is not being set correctly when building...
 			//return SceneManager.GetSceneByBuildIndex(Index);
+
+			//not sure why, but buildIndex is not being set correctly when building...
 			//just use the path instead
 			return SceneManager.GetSceneByPath(ScenePath);
 		}
@@ -137,13 +142,15 @@ namespace WIDVE.Utilities
 		void SyncDataToSceneAsset(SceneAsset scene)
 		{
 			if (scene)
-			{	//get current info from scene
+			{
+				//get current info from scene
 				Name = scene.name;
 				Index = SceneManager.GetSceneByName(Name).buildIndex;
 				ScenePath = AssetDatabase.GetAssetOrScenePath(scene);
 			}
 			else
-			{	//set default values if no scene is available
+			{
+				//set default values if no scene is available
 				Name = "NULL";
 				Index = -2; //set this to -2 because -1 already has a special meaning (see below)
 				ScenePath = null;
@@ -156,29 +163,35 @@ namespace WIDVE.Utilities
 		/// </summary>
 		/// <param name="print">Set this to true to print debug messages when a scene cannot be loaded.</param>
 		public bool IsLoadableByIndex(bool print=false)
-		{   //check if scene can be loaded based on index
+		{  
+			//check if scene can be loaded based on index
 			//see https://docs.unity3d.com/ScriptReference/SceneManagement.Scene-buildIndex.html
 			if(Index == -2)
-			{   //uninitialized SceneObject
+			{
+				//uninitialized SceneObject
 				if (print) Debug.LogError($"Scene '{Name}' cannot be loaded by index; SceneObject is invalid.");
 				return false;
 			}
 			else if (Index == -1)
-			{   //scene is in AssetBundle
+			{
+				//scene is in AssetBundle
 				if (print) Debug.LogError($"Scene '{Name}' cannot be loaded by index; scene is part of asset bundle.");
 				return false;
 			}
 			else if (Index >= 0 && Index < SceneManager.sceneCountInBuildSettings)
-			{   //scene can be loaded
+			{
+				//scene can be loaded
 				return true;
 			}
 			else if(Index >= SceneManager.sceneCountInBuildSettings)
-			{   //scene not included in build settings
+			{
+				//scene not included in build settings
 				if (print) Debug.LogError($"Scene '{Name}' cannot be loaded by index; scene is not included in build settings.");
 				return false;
 			}
 			else
-			{   //can't load for an unknown reason
+			{
+				//can't load for an unknown reason
 				if (print) Debug.LogError($"Scene '{Name}' cannot be loaded by index; unknown error.");
 				return false;
 			}
@@ -196,7 +209,7 @@ namespace WIDVE.Utilities
 
 		/// <summary>
 		/// Unload the scene asynchronously.
-		/// <para>Editor only: The scene will not be unloaded if has any unsaved changes.</para>
+		/// <para>In the Editor, the scene will not be unloaded if has any unsaved changes.</para>
 		/// </summary>
 		public Commands.Unload Unload(LoadSceneMode mode=LoadSceneMode.Additive, CommandHistory ch=null)
 		{
@@ -214,19 +227,23 @@ namespace WIDVE.Utilities
 		AsyncOperation LoadAsync(LoadSceneMode mode)
 		{
 #if UNITY_EDITOR
-			//in editor, load by path
 			LoadSceneParameters lsp = new LoadSceneParameters(mode);
+
+			//in editor, load scene by path, since build index is broken...
 			if (Application.isPlaying)
-			{	//load async
+			{
+				//load async
 				return EditorSceneManager.LoadSceneAsyncInPlayMode(ScenePath, lsp);
 			}
 			else
-			{	//can't load async in the editor...
+			{
+				//can't load async in the editor...
 				EditorSceneManager.OpenScene(ScenePath, GetOpenSceneMode(mode));
 				SceneObjectLoaded?.Invoke(GetScene(), mode);
 				return null;
 			}
 #endif
+
 			//buildIndex is being set incorrectly when making builds, so load by path
 			return SceneManager.LoadSceneAsync(ScenePath, mode);
 			/*
@@ -248,32 +265,39 @@ namespace WIDVE.Utilities
 			try
 			{
 				Scene scene = GetScene();
+
 #if UNITY_EDITOR
 				//in editor, unload by path
 				if (scene.isLoaded)
 				{
 					if (scene.isDirty && !Application.isPlaying)
-					{	//don't unload if it would lose unsaved changes
+					{
+						//don't unload if it would lose unsaved changes
 						Debug.LogError($"Please save scene '{Name}' before unloading!");
 						return null;
 					}
 					else
 					{
+						//unload!
 						return SceneManager.UnloadSceneAsync(scene);
 					}
 				}
 				else
-				{	//scene is not currently loaded...
+				{
+					//scene is not currently loaded...
 					if (Application.isPlaying)
-					{	//don't try to unload a scene if it isn't already loaded
+					{
+						//don't try to unload a scene if it isn't loaded
 						return null;
 					}
 					else
-					{   //remove the scene from the hierarchy
+					{
+						//remove the scene from the hierarchy
 						return SceneManager.UnloadSceneAsync(scene);
 					}
 				}
 #endif
+
 				//buildIndex is being set incorrectly when making builds, so load by path
 				return SceneManager.UnloadSceneAsync(ScenePath);
 				/*
@@ -289,7 +313,9 @@ namespace WIDVE.Utilities
 				*/
 			}
 			catch (System.ArgumentException ae)
-			{   //this happens if the scene is not currently loaded when the unload operation starts
+			{
+				//this happens if the scene is not currently loaded when the unload operation starts
+				//just ignore it
 				return null;
 			}
 		}
@@ -302,12 +328,17 @@ namespace WIDVE.Utilities
 		public bool Open()
 		{
 			bool opened = false;
+
 			Scene scene = GetScene();
+
 			if (!scene.isLoaded)
 			{
-				EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.AdditiveWithoutLoading);
+				Scene openedScene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.AdditiveWithoutLoading);
+				if(openedScene == scene) opened = true;
 			}
+
 			if (opened) SceneObjectOpened?.Invoke(scene, OpenSceneMode.AdditiveWithoutLoading);
+
 			return opened;
 		}
 
@@ -319,7 +350,9 @@ namespace WIDVE.Utilities
 		public bool Close()
 		{
 			bool closed = false;
+
 			Scene scene = GetScene();
+
 			if (scene.isLoaded)
 			{
 				if (scene.isDirty)
@@ -331,7 +364,9 @@ namespace WIDVE.Utilities
 					closed = EditorSceneManager.CloseScene(scene, false);
 				}
 			}
+
 			if (closed) SceneObjectClosed?.Invoke(scene);
+
 			return closed;
 		}
 #endif
@@ -347,16 +382,8 @@ namespace WIDVE.Utilities
 		}
 
 		public void OnAfterDeserialize()
-		{	//syncing here causes a serialization error...
-			//Sync();
-		}
-
-		void OnValidate()
-		{   //undocumented, but OnValidate -is- called on ScriptableObjects
-			if (!EditorApplication.isPlayingOrWillChangePlaymode)
-			{
-				Sync();
-			}
+		{
+			//syncing here causes a serialization error...
 		}
 #endif
 
@@ -383,11 +410,13 @@ namespace WIDVE.Utilities
 					Debug.Log($"Loading scene '{Target.Name}'...");
 					Operation = Target.LoadAsync(Mode);
 					if (Operation != null)
-					{	//scene is being loaded
+					{
+						//scene is being loaded
 						Operation.completed += InvokeSceneObjectLoaded;
 					}
 					else
-					{   //this could be null if:
+					{
+						//this could be null if:
 						//	scene is loaded in the editor - this will load without using an AsyncOperation
 						//	something went wrong with loading
 					}
@@ -398,12 +427,14 @@ namespace WIDVE.Utilities
 					Debug.Log($"Unloading scene '{Target.Name}'...");
 					Operation = Target.UnloadAsync();
 					if (Operation != null)
-					{	//scene is being unloaded
+					{
+						//scene is being unloaded
 						Operation.completed += InvokeSceneObjectUnloaded;
 						//todo: on non-additive Undo, reload the previously active scene
 					}
 					else
-					{   //this could happen for several reasons:
+					{
+						//this could happen for several reasons:
 						//	trying to unload a scene with unsaved changes
 						//	trying to unload a scene that has already been unloaded
 						//	trying to unload a scene that is currently loading
@@ -425,6 +456,7 @@ namespace WIDVE.Utilities
 
 			/// <summary>
 			/// Unload scene asynchronously.
+			/// <para>Just the opposite of the Load command.</para>
 			/// </summary>
 			public class Unload : Load
 			{
@@ -444,10 +476,10 @@ namespace WIDVE.Utilities
 		}
 
 #if UNITY_EDITOR
+		[CanEditMultipleObjects]
 		[CustomEditor(typeof(SceneObject))]
 		public class Editor : UnityEditor.Editor
 		{
-			SceneObject Target;
 			SerializedProperty Scene;
 			SerializedProperty ScenePath;
 			SerializedProperty Name;
@@ -455,19 +487,20 @@ namespace WIDVE.Utilities
 
 			void OnEnable()
 			{
-				Target = target as SceneObject;
-
-				Scene = serializedObject.FindProperty(nameof(SceneObject.Scene));
-				ScenePath = serializedObject.FindProperty(nameof(SceneObject._scenePath));
-				Name = serializedObject.FindProperty(nameof(SceneObject._name));
-				Index = serializedObject.FindProperty(nameof(SceneObject._index));
+				Scene = serializedObject.FindProperty(nameof(_scene));
+				ScenePath = serializedObject.FindProperty(nameof(_scenePath));
+				Name = serializedObject.FindProperty(nameof(_name));
+				Index = serializedObject.FindProperty(nameof(_index));
 			}
 
 			public override void OnInspectorGUI()
 			{
 				serializedObject.Update();
 
+				//show the scene - the only field the user can edit
+				EditorGUI.BeginChangeCheck();
 				EditorGUILayout.PropertyField(Scene);
+				bool sceneChanged = EditorGUI.EndChangeCheck();
 
 				//these are set during Sync, so don't let the user edit them
 				GUI.enabled = false;
@@ -476,32 +509,61 @@ namespace WIDVE.Utilities
 				EditorGUILayout.PropertyField(Index);
 				GUI.enabled = true;
 
-				//show buttons
-				if (!Application.isPlaying)
-				{   //press this button to manually sync (for debugging)
-					if (GUILayout.Button("Refresh"))
+				serializedObject.ApplyModifiedProperties();
+
+				//sync if the scene changed
+				if(sceneChanged)
+				{
+					foreach(SceneObject so in targets)
 					{
-						Target.Sync();
+						so.Sync();
 					}
 				}
-				if (GUILayout.Button("Open"))
+
+				//show buttons
+				if (!Application.isPlaying)
 				{
-					Target.Open();
-				}
-				if (GUILayout.Button("Close"))
-				{
-					Target.Close();
-				}
-				if (GUILayout.Button("Load"))
-				{
-					Target.Load(LoadSceneMode.Additive);
-				}
-				if (GUILayout.Button("Unload"))
-				{
-					Target.Unload(LoadSceneMode.Additive);
+					//press this button to manually sync (for debugging)
+					if (GUILayout.Button("Refresh"))
+					{
+						foreach(SceneObject so in targets)
+						{
+							so.Sync();
+						}
+					}
 				}
 
-				serializedObject.ApplyModifiedProperties();
+				if (GUILayout.Button("Open"))
+				{
+					foreach(SceneObject so in targets)
+					{
+						so.Open();
+					}
+				}
+
+				if (GUILayout.Button("Close"))
+				{
+					foreach(SceneObject so in targets)
+					{
+						so.Close();
+					}
+				}
+
+				if (GUILayout.Button("Load"))
+				{
+					foreach(SceneObject so in targets)
+					{
+						so.Load(LoadSceneMode.Additive);
+					}
+				}
+
+				if (GUILayout.Button("Unload"))
+				{
+					foreach(SceneObject so in targets)
+					{
+						so.Unload(LoadSceneMode.Additive);
+					}
+				}
 			}
 		}
 #endif
