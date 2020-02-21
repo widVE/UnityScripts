@@ -111,7 +111,7 @@ namespace WIDVE.Utilities
 		}
 
 #if UNITY_EDITOR
-		[CustomPropertyDrawer(typeof(ButtonWatcher))]
+		//[CustomPropertyDrawer(typeof(ButtonWatcher))]
 		class PropertyDrawer : WIDVEPropertyDrawer
 		{
 			public override float GetPropertyHeight(SerializedProperty property, GUIContent label)

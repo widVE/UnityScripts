@@ -60,7 +60,7 @@ namespace WIDVE.Utilities
 	public abstract class Button<T> : Button where T : struct
 	{
 		/// <summary>
-		/// Returns current smoothed button value.
+		/// Returns current button value, adjusted by Multiplier and the Smoothing function.
 		/// <para>Note: this is *not* scaled by deltaTime.</para>
 		/// </summary>
 		public abstract T GetValue();

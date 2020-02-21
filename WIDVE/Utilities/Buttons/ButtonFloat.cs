@@ -12,13 +12,20 @@ namespace WIDVE.Utilities
 		public override float GetValue()
 		{
 			float value = 0f;
-			if (Active)
+			if(Active)
 			{
 				float rawValue = GetRawValue();
 				value = GetSmoothedFloat(rawValue, Smoothing, Multiplier);
 			}
 			return value;
 		}
+
+		protected int LastPollFrame = 0;
+
+		protected enum States { NotHeld, Held }
+		protected States LastPollState = States.NotHeld;
+
+		protected virtual void UpdateState() { } //abstract...
 
 		public virtual bool GetHeld() { return false; }
 
