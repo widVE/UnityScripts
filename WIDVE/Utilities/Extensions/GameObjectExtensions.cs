@@ -158,9 +158,11 @@ namespace WIDVE.Utilities
 		/// <para>In Prefab mode, marks the prefab asset containing this GameObject as dirty.</para>
 		/// <para>In Play mode, does nothing.</para>
 		/// </summary>
+		/// <returns>True if the object was marked dirty, false otherwise.</returns>
 		public static bool MarkDirty(this GameObject gameObject)
 		{
 #if UNITY_EDITOR
+			//skip in play mode
 			if (Application.isPlaying) return false;
 
 			GameObjectEnvironments environment = gameObject.GetGameObjectEnvironment();
