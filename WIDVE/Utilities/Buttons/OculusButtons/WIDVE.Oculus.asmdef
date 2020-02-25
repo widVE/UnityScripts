@@ -1,8 +1,8 @@
 {
     "name": "WIDVE.Oculus",
     "references": [
-        "GUID:e19b1a2c8fe40d74886128dafceae62d",
-        "GUID:f64c9ebcd7899c3448a08dc9f9ddbe30"
+        "WIDVE",
+        "Oculus.VR"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
