@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditorInternal;
 #endif
+using WIDVE.Patterns;
 using WIDVE.Utilities;
 
 namespace WIDVE.Graphics
@@ -28,21 +30,21 @@ namespace WIDVE.Graphics
 		public float Value => Mathf.Clamp01(Smoothing.Evaluate(RawValue));
 
 		[SerializeField]
+		[HideInInspector]
 		List<GameObject> _interpolatableObjects;
 		List<GameObject> InterpolatableObjects => _interpolatableObjects ?? (_interpolatableObjects = new List<GameObject>());
-
-		InterfaceCollection<IInterpolatable> _interpolatables;
-		InterfaceCollection<IInterpolatable> Interpolatables => _interpolatables ?? (_interpolatables = new InterfaceCollection<IInterpolatable>());
 
 		/// <summary>
 		/// Delegate that operates on a single float value.
 		/// </summary>
 		/// <param name="value">Float between 0 and 1.</param>
 		public delegate void ValueChangedDelegate(float value);
+
 		/// <summary>
 		/// Called whenever RawValue is changed.
 		/// </summary>
 		public event ValueChangedDelegate RawValueChanged;
+
 		/// <summary>
 		/// Called whenever Value is changed.
 		/// </summary>
@@ -64,7 +66,9 @@ namespace WIDVE.Graphics
 			{
 				GameObject io = InterpolatableObjects[i];
 				if(!io || !io.activeInHierarchy) continue;
-				if(Interpolatables.Get(io) is IInterpolatable ii)
+
+				//access the IInterpolatable interface from attached GameObjects
+				if(InterfaceCache.Get<IInterpolatable>(io) is IInterpolatable ii)
 				{
 					if(!ii.Enabled && !ii.FunctionWhenDisabled) continue;
 					ii.SetValue(Value);
@@ -87,64 +91,120 @@ namespace WIDVE.Graphics
 		/// <summary>
 		/// Lerp from current value to target value over time.
 		/// </summary>
-		/// <param name="targetValue">Target value at end of lerp.</param>
+		/// <param name="value">Target value at end of lerp.</param>
 		/// <param name="time">Time in seconds to lerp from 0 to 1.</param>
-		public void LerpOverTime(float targetValue, float time)
+		public void LerpOverTime(float value, float time)
 		{
 			StopAllCoroutines();
-			StartCoroutine(InterpolateOverTime(targetValue, time));
+
+			StartCoroutine(InterpolateOverTime(value, time));
 		}
 
 		/// <summary>
 		/// Lerp from startValue to endValue over time.
 		/// </summary>
-		/// <param name="startValue">Starting value.</param>
-		/// <param name="endValue">Ending value.</param>
+		/// <param name="start">Starting value.</param>
+		/// <param name="end">Ending value.</param>
 		/// <param name="time">Time in seconds to lerp from startValue to endValue.</param>
-		public void LerpOverTime(float startValue, float endValue, float time)
+		public void LerpOverTime(float start, float end, float time)
 		{
 			StopAllCoroutines();
-			SetRawValue(startValue);
+
+			SetRawValue(start);
+
 			//in the coroutine, 'time' is really just velocity...
 			//...we need to compute a new time value based on the difference between start and end values
-			float lerpTime = time / Mathf.Abs(startValue - endValue);
-			StartCoroutine(InterpolateOverTime(endValue, lerpTime));
+			float lerpTime = time / Mathf.Abs(start - end);
+
+			StartCoroutine(InterpolateOverTime(end, lerpTime));
 		}
 
 		/// <summary>
 		/// Coroutine that lerps RawValue towards targetValue over time.
 		/// </summary>
-		/// <param name="targetValue">Value to lerp towards.</param>
+		/// <param name="value">Value to lerp towards.</param>
 		/// <param name="time">Time in seconds to lerp from 0 to 1.</param>
-		IEnumerator InterpolateOverTime(float targetValue, float time)
-		{   //use RawValue so smoothing doesn't get in the way
-			if (!Mathf.Approximately(RawValue, targetValue))
+		IEnumerator InterpolateOverTime(float value, float time)
+		{
+			if (!Mathf.Approximately(RawValue, value))
 			{
+				//if time is 0 or values already match, just skip to end
 				if (time > 0)
-				{	//lerp over time
-					float newRawValue;
-					if (RawValue < targetValue)
-					{   //increase over time
-						while (RawValue < targetValue)
+				{
+					//lerp raw value over time
+					if (RawValue < value)
+					{
+						//increase over time
+						while (RawValue < value)
 						{
-							newRawValue = RawValue + (Time.deltaTime / time);
-							SetRawValue(Mathf.Min(newRawValue, targetValue));
+							float newRawValue = RawValue + (Time.deltaTime / time);
+							SetRawValue(Mathf.Min(newRawValue, value));
 							yield return null;
 						}
 					}
 					else
-					{   //decrease over time
-						while (RawValue > targetValue)
+					{
+						//decrease over time
+						while (RawValue > value)
 						{
-							newRawValue = RawValue - (Time.deltaTime / time);
-							SetRawValue(Mathf.Max(newRawValue, targetValue));
+							float newRawValue = RawValue - (Time.deltaTime / time);
+							SetRawValue(Mathf.Max(newRawValue, value));
 							yield return null;
 						}
 					}
-				}   //if time is 0 or values already match, just skip to end
+				}
 			}
-			//set value directly at end
-			SetRawValue(targetValue);
+
+			//set raw value directly at end
+			SetRawValue(value);
+		}
+
+		public class Commands
+		{
+			public class Lerp : Command<Interpolator>
+			{
+				readonly float? Start;
+				readonly float End;
+				readonly float Time;
+				float i_RawValue;
+
+				/// <summary>
+				/// Creates a lerp from current value to the end value over time.
+				/// </summary>
+				public Lerp(Interpolator target, float end, float time) : base(target)
+				{
+					Start = null;
+					End = end;
+					Time = time;
+				}
+
+				/// <summary>
+				/// Creates a lerp from the start value to the end value over time.
+				/// </summary>
+				public Lerp(Interpolator target, float start, float end, float time) : this(target, end, time)
+				{
+					Start = start;
+				}
+
+				public override void Execute()
+				{
+					//store initial interpolator raw value
+					i_RawValue = Target.RawValue;
+
+					//start lerping toward the new value
+					if(Start is float start) Target.LerpOverTime(start, End, Time);
+					else Target.LerpOverTime(End, Time);
+				}
+
+				public override void Undo()
+				{
+					//stop lerping
+					Target.StopAllCoroutines();
+
+					//restore original raw value
+					Target.SetRawValue(i_RawValue);
+				}
+			}
 		}
 
 #if UNITY_EDITOR
@@ -152,17 +212,43 @@ namespace WIDVE.Graphics
 		[CustomEditor(typeof(Interpolator))]
 		class Editor : UnityEditor.Editor
 		{
+			ReorderableList _interpolatableObjects;
+
+			protected virtual void OnEnable()
+			{
+				_interpolatableObjects = new ReorderableList(serializedObject, serializedObject.FindProperty(nameof(_interpolatableObjects)),
+											true, true, true, true);
+
+				_interpolatableObjects.drawHeaderCallback = rect =>
+				{
+					EditorGUI.LabelField(rect, "Interpolatable Objects");
+				};
+
+				_interpolatableObjects.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) =>
+				{
+					SerializedProperty element = _interpolatableObjects.serializedProperty.GetArrayElementAtIndex(index);
+					EditorGUI.PropertyField(position: new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight),
+											property: element,
+											label: new GUIContent(index.ToString()));
+				};
+			}
+
 			public override void OnInspectorGUI()
 			{
 				EditorGUI.BeginChangeCheck();
 
-				base.OnInspectorGUI();
+				serializedObject.Update();
+
+				DrawDefaultInspector();
+				_interpolatableObjects.DoLayoutList();
+
+				serializedObject.ApplyModifiedProperties();
 
 				if(EditorGUI.EndChangeCheck())
 				{
-					foreach(Object t in targets)
-					{	//notify that RawValue has changed
-						Interpolator i = (t as Interpolator);
+					foreach(Interpolator i in targets)
+					{
+						//notify that RawValue has changed
 						i.SetRawValue(i.RawValue);
 					}
 				}

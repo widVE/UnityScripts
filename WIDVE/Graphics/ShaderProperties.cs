@@ -173,20 +173,36 @@ namespace WIDVE.Graphics
 
 		//all the properties...
 		[SerializeField]
-		List<ColorProperty> _colorProperties;
-		public List<ColorProperty> ColorProperties => _colorProperties ?? (_colorProperties = new List<ColorProperty>());
+		ColorProperty[] _colorProperties;
+		public ColorProperty[] ColorProperties
+		{
+			get => _colorProperties ?? (_colorProperties = new ColorProperty[0]);
+			private set => _colorProperties = value;
+		}
 
 		[SerializeField]
-		List<FloatProperty> _floatProperties;
-		public List<FloatProperty> FloatProperties => _floatProperties ?? (_floatProperties = new List<FloatProperty>());
+		FloatProperty[] _floatProperties;
+		public FloatProperty[] FloatProperties
+		{
+			get => _floatProperties ?? (_floatProperties = new FloatProperty[0]);
+			private set => _floatProperties = value;
+		}
 
 		[SerializeField]
-		List<VectorProperty> _vectorProperties;
-		public List<VectorProperty> VectorProperties => _vectorProperties ?? (_vectorProperties = new List<VectorProperty>());
+		VectorProperty[] _vectorProperties;
+		public VectorProperty[] VectorProperties
+		{
+			get => _vectorProperties ?? (_vectorProperties = new VectorProperty[0]);
+			private set => _vectorProperties = value;
+		}
 
 		[SerializeField]
-		List<TextureProperty> _textureProperties;
-		public List<TextureProperty> TextureProperties => _textureProperties ?? (_textureProperties = new List<TextureProperty>());
+		TextureProperty[] _textureProperties;
+		public TextureProperty[] TextureProperties
+		{
+			get => _textureProperties ?? (_textureProperties = new TextureProperty[0]);
+			private set => _textureProperties = value;
+		}
 
 		void SetPropertiesFromShader()
 		{
@@ -201,17 +217,17 @@ namespace WIDVE.Graphics
 		void SetPropertiesFromShader(Shader shader)
 		{
 #if UNITY_EDITOR
+			//store properties in lists to start
+			List<ColorProperty> colorProperties = new List<ColorProperty>();
+			List<FloatProperty> floatProperties = new List<FloatProperty>();
+			List<VectorProperty> vectorProperties = new List<VectorProperty>();
+			List<TextureProperty> textureProperties = new List<TextureProperty>();
+
 			//open shader file to read attributes (necessary for enum checking)
 			string shaderPath = AssetDatabase.GetAssetPath(shader);
 
 			using(StreamReader sr = new StreamReader(shaderPath))
 			{
-				//reset property lists
-				ColorProperties.Clear();
-				FloatProperties.Clear();
-				VectorProperties.Clear();
-				TextureProperties.Clear();
-
 				//read all properties from shader and add them to the right list
 				for(int i = 0; i < ShaderUtil.GetPropertyCount(shader); i++)
 				{
@@ -220,9 +236,12 @@ namespace WIDVE.Graphics
 
 					switch(type)
 					{
+						//Color property:
 						case ShaderUtil.ShaderPropertyType.Color:
-							ColorProperties.Add(new ColorProperty(name, shader));
+							colorProperties.Add(new ColorProperty(name, shader));
 							break;
+
+						//Float property:
 						case ShaderUtil.ShaderPropertyType.Range:
 						case ShaderUtil.ShaderPropertyType.Float:
 							//check if float is an enum:
@@ -256,25 +275,34 @@ namespace WIDVE.Graphics
 							sr.BaseStream.Seek(0, SeekOrigin.Begin);
 
 							//now can add the property
-							FloatProperties.Add(new FloatProperty(name, shader, isEnum));
+							floatProperties.Add(new FloatProperty(name, shader, isEnum));
 							break;
 
+						//Vector property:
 						case ShaderUtil.ShaderPropertyType.Vector:
-							VectorProperties.Add(new VectorProperty(name, shader));
+							vectorProperties.Add(new VectorProperty(name, shader));
 							break;
 
+						//Texture property:
 						case ShaderUtil.ShaderPropertyType.TexEnv:
-							TextureProperties.Add(new TextureProperty(name, shader));
+							textureProperties.Add(new TextureProperty(name, shader));
 							break;
 
+						//Unknown property:
 						default:
 							Debug.Log($"Unsupported shader property '{name}' (type: {type})");
 							break;
 					}
 				}
+
+				//store properties in arrays
+				ColorProperties = colorProperties.ToArray();
+				FloatProperties = floatProperties.ToArray();
+				VectorProperties = vectorProperties.ToArray();
+				TextureProperties = textureProperties.ToArray();
 			}
 #else
-			Debug.Log("Can't retrieve shader properties outside of edit mode!");
+			Debug.LogError("Error retrieving shader properties; Can't access ShaderUtil outside of edit mode.");
 #endif
 		}
 
@@ -287,7 +315,7 @@ namespace WIDVE.Graphics
 		public void SetRenderModes(Material src, Material dst)
 		{
 			//need this because MaterialPropertyBlocks don't affect rendering settings (Cull, Zwrite, etc)
-			for(int i = 0; i < FloatProperties.Count; i++)
+			for(int i = 0; i < FloatProperties.Length; i++)
 			{
 				//set all float properties that represent enums
 				FloatProperty fp = FloatProperties[i];
@@ -300,21 +328,21 @@ namespace WIDVE.Graphics
 		/// <summary>
 		/// Sets the MaterialPropertyBlock to have all properties from the given Material.
 		/// </summary>
-		public void SetPropertyBlock(MaterialPropertyBlock mpb, Material m)
+		public void SetProperties(MaterialPropertyBlock mpb, Material m)
 		{
-			for(int i = 0; i < ColorProperties.Count; i++)
+			for(int i = 0; i < ColorProperties.Length; i++)
 			{
 				ColorProperty cp = ColorProperties[i];
 				mpb.SetColor(cp.Name, cp.Get(m));
 			}
 
-			for(int i = 0; i < FloatProperties.Count; i++)
+			for(int i = 0; i < FloatProperties.Length; i++)
 			{
 				FloatProperty fp = FloatProperties[i];
 				mpb.SetFloat(fp.Name, fp.Get(m));
 			}
 
-			for(int i = 0; i < VectorProperties.Count; i++)
+			for(int i = 0; i < VectorProperties.Length; i++)
 			{
 				VectorProperty vp = VectorProperties[i];
 				mpb.SetVector(vp.Name, vp.Get(m));
@@ -322,7 +350,8 @@ namespace WIDVE.Graphics
 
 			if(USE_TEXTURES)
 			{
-				for(int i = 0; i < TextureProperties.Count; i++)
+				//this should work, but doesn't... haven't debugged it yet
+				for(int i = 0; i < TextureProperties.Length; i++)
 				{
 					TextureProperty tp = TextureProperties[i];
 					mpb.SetTexture(tp.Name, tp.Get(m));
@@ -330,25 +359,56 @@ namespace WIDVE.Graphics
 			}
 		}
 
+		void SetColorValue(MaterialPropertyBlock mpb, int colorIndex, float value)
+		{
+			for(int i = 0; i < ColorProperties.Length; i++)
+			{
+				ColorProperty cp = ColorProperties[i];
+				Color c = mpb.GetColor(cp.Name);
+				c[colorIndex] = value;
+				mpb.SetColor(cp.Name, c);
+			}
+		}
+
+		/// <summary>
+		/// Sets the red value of all colors in the MaterialPropertyBlock.
+		/// </summary>
+		public void SetRed(MaterialPropertyBlock mpb, float value)		{ SetColorValue(mpb, 0, value); }
+
+		/// <summary>
+		/// Sets the green value of all colors in the MaterialPropertyBlock.
+		/// </summary>
+		public void SetGreen(MaterialPropertyBlock mpb, float value)	{ SetColorValue(mpb, 1, value); }
+
+		/// <summary>
+		/// Sets the blue value of all colors in the MaterialPropertyBlock.
+		/// </summary>
+		public void SetBlue(MaterialPropertyBlock mpb, float value)		{ SetColorValue(mpb, 2, value); }
+
+		/// <summary>
+		/// Sets the alpha value of all colors in the MaterialPropertyBlock.
+		/// </summary>
+		public void SetAlpha(MaterialPropertyBlock mpb, float value)	{ SetColorValue(mpb, 3, value); }
+
 		/// <summary>
 		/// Sets the MaterialPropertyBlock to have the lerp of all properties between Materials a and b, at time t.
 		/// </summary>
-		public void LerpPropertyBlock(MaterialPropertyBlock mpb, Material a, Material b, float t)
+		public void LerpProperties(MaterialPropertyBlock mpb, Material a, Material b, float t)
 		{
 			//lerp all properties of each type
-			for(int i = 0; i < ColorProperties.Count; i++)
+			for(int i = 0; i < ColorProperties.Length; i++)
 			{
 				ColorProperty cp = ColorProperties[i];
 				mpb.SetColor(cp.Name, cp.Lerp(a, b, t));
 			}
 
-			for(int i = 0; i < FloatProperties.Count; i++)
+			for(int i = 0; i < FloatProperties.Length; i++)
 			{
 				FloatProperty fp = FloatProperties[i];
 				mpb.SetFloat(fp.Name, fp.Lerp(a, b, t));
 			}
 
-			for(int i = 0; i < VectorProperties.Count; i++)
+			for(int i = 0; i < VectorProperties.Length; i++)
 			{
 				VectorProperty vp = VectorProperties[i];
 				mpb.SetVector(vp.Name, vp.Lerp(a, b, t));
@@ -357,7 +417,7 @@ namespace WIDVE.Graphics
 			if(USE_TEXTURES)
 			{
 				//currently unsupported...
-				for(int i = 0; i < TextureProperties.Count; i++)
+				for(int i = 0; i < TextureProperties.Length; i++)
 				{
 					TextureProperty tp = TextureProperties[i];
 					mpb.SetTexture(tp.Name, tp.Lerp(a, b, t));
