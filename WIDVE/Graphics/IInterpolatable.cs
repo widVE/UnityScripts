@@ -11,4 +11,14 @@ namespace WIDVE.Graphics
 
 		void SetValue(float value);
 	}
+
+	public static class IInterpolatableExtensions
+	{
+		public static bool IsActive(this IInterpolatable ii)
+		{
+			if(ii.Enabled) return true;
+			if(!ii.Enabled && ii.FunctionWhenDisabled) return true;
+			return false;
+		}
+	}
 }

@@ -44,7 +44,8 @@ namespace WIDVE.Patterns
 		{
 			Undos.Push(command);
 			if(clearRedoHistory && Redos.Count > 0)
-			{	//all current redos are now invalid
+			{
+				//all current redos are now invalid
 				Redos.Clear();
 			}
 		}
@@ -58,7 +59,9 @@ namespace WIDVE.Patterns
 			if (command != null)
 			{
 				if (PrintToConsole) Debug.Log($"Executing {command.Name} command.");
+
 				command.Execute();
+
 				if (Recording) Record(command);
 			}
 			else
@@ -92,6 +95,7 @@ namespace WIDVE.Patterns
 				if (command != null)
 				{
 					if (PrintToConsole) Debug.Log($"Undoing {command.Name} command.");
+
 					command.Undo();
 					Redos.Push(command);
 				}
@@ -116,6 +120,7 @@ namespace WIDVE.Patterns
 				if(command != null)
 				{
 					if (PrintToConsole) Debug.Log($"Redoing {command.Name} command...");
+
 					command.Execute();
 					Undos.Push(command);
 				}
@@ -137,10 +142,7 @@ namespace WIDVE.Patterns
 			while(Undos.Count > 0)
 			{
 				ICommand command = Undo();
-				if(command != null)
-				{
-					commandsUndone++;
-				}
+				if(command != null) commandsUndone++;
 			}
 			return commandsUndone;
 		}
@@ -155,10 +157,7 @@ namespace WIDVE.Patterns
 			while(Redos.Count > 0)
 			{
 				ICommand command = Redo();
-				if(command != null)
-				{
-					commandsRedone++;
-				}
+				if(command != null) commandsRedone++;
 			}
 			return commandsRedone;
 		}
@@ -188,13 +187,10 @@ namespace WIDVE.Patterns
 		/// <summary>
 		/// Clear all undo and redo entries. 
 		/// </summary>
-		/// <returns>Number of entries cleared.</returns>
-		public int Clear()
+		/// <returns>Tuple with (number of undos, number of redos) cleared.</returns>
+		public (int, int) Clear()
 		{
-			int entriesCleared = 0;
-			entriesCleared += ClearUndos();
-			entriesCleared += ClearRedos();
-			return entriesCleared;
+			return (ClearUndos(), ClearRedos());
 		}
 	}
 }

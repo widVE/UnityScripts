@@ -34,6 +34,8 @@ namespace WIDVE.Graphics
 		List<GameObject> _interpolatableObjects;
 		List<GameObject> InterpolatableObjects => _interpolatableObjects ?? (_interpolatableObjects = new List<GameObject>());
 
+		IEnumerator ActiveLerp = null;
+
 		/// <summary>
 		/// Delegate that operates on a single float value.
 		/// </summary>
@@ -68,9 +70,10 @@ namespace WIDVE.Graphics
 				if(!io || !io.activeInHierarchy) continue;
 
 				//access the IInterpolatable interface from attached GameObjects
+				//test if this is actually faster than just calling GetComponent every time...
 				if(InterfaceCache.Get<IInterpolatable>(io) is IInterpolatable ii)
 				{
-					if(!ii.Enabled && !ii.FunctionWhenDisabled) continue;
+					if(!ii.IsActive()) continue;
 					ii.SetValue(Value);
 				}
 			}
@@ -80,24 +83,24 @@ namespace WIDVE.Graphics
 		/// Lerp from current value to zero over time.
 		/// </summary>
 		/// <param name="time">Time in seconds to lerp from 0 to 1.</param>
-		public void LerpTo0(float time) { LerpOverTime(0f, time); }
+		public ICommand LerpTo0(float time) { return LerpOverTime(0f, time); }
 
 		/// <summary>
 		/// Lerp from current value to one over time.
 		/// </summary>
 		/// <param name="time">Time in seconds to lerp from 0 to 1.</param>
-		public void LerpTo1(float time) { LerpOverTime(1f, time); }
+		public ICommand LerpTo1(float time) { return LerpOverTime(1f, time); }
 
 		/// <summary>
 		/// Lerp from current value to target value over time.
 		/// </summary>
 		/// <param name="value">Target value at end of lerp.</param>
 		/// <param name="time">Time in seconds to lerp from 0 to 1.</param>
-		public void LerpOverTime(float value, float time)
+		public ICommand LerpOverTime(float value, float time)
 		{
-			StopAllCoroutines();
-
-			StartCoroutine(InterpolateOverTime(value, time));
+			ICommand l = new Commands.Lerp(this, value, time);
+			l.Execute();
+			return l;
 		}
 
 		/// <summary>
@@ -106,57 +109,19 @@ namespace WIDVE.Graphics
 		/// <param name="start">Starting value.</param>
 		/// <param name="end">Ending value.</param>
 		/// <param name="time">Time in seconds to lerp from startValue to endValue.</param>
-		public void LerpOverTime(float start, float end, float time)
+		public ICommand LerpOverTime(float start, float end, float time)
 		{
-			StopAllCoroutines();
-
-			SetRawValue(start);
-
-			//in the coroutine, 'time' is really just velocity...
-			//...we need to compute a new time value based on the difference between start and end values
-			float lerpTime = time / Mathf.Abs(start - end);
-
-			StartCoroutine(InterpolateOverTime(end, lerpTime));
+			ICommand l = new Commands.Lerp(this, start, end, time);
+			l.Execute();
+			return l;
 		}
 
 		/// <summary>
-		/// Coroutine that lerps RawValue towards targetValue over time.
+		/// Stops any current lerp in progress.
 		/// </summary>
-		/// <param name="value">Value to lerp towards.</param>
-		/// <param name="time">Time in seconds to lerp from 0 to 1.</param>
-		IEnumerator InterpolateOverTime(float value, float time)
+		public void StopLerp()
 		{
-			if (!Mathf.Approximately(RawValue, value))
-			{
-				//if time is 0 or values already match, just skip to end
-				if (time > 0)
-				{
-					//lerp raw value over time
-					if (RawValue < value)
-					{
-						//increase over time
-						while (RawValue < value)
-						{
-							float newRawValue = RawValue + (Time.deltaTime / time);
-							SetRawValue(Mathf.Min(newRawValue, value));
-							yield return null;
-						}
-					}
-					else
-					{
-						//decrease over time
-						while (RawValue > value)
-						{
-							float newRawValue = RawValue - (Time.deltaTime / time);
-							SetRawValue(Mathf.Max(newRawValue, value));
-							yield return null;
-						}
-					}
-				}
-			}
-
-			//set raw value directly at end
-			SetRawValue(value);
+			if(ActiveLerp != null) StopCoroutine(ActiveLerp);
 		}
 
 		public class Commands
@@ -167,6 +132,7 @@ namespace WIDVE.Graphics
 				readonly float End;
 				readonly float Time;
 				float i_RawValue;
+				IEnumerator LerpIEnumerator;
 
 				/// <summary>
 				/// Creates a lerp from current value to the end value over time.
@@ -188,21 +154,88 @@ namespace WIDVE.Graphics
 
 				public override void Execute()
 				{
-					//store initial interpolator raw value
+					//store initial raw value
 					i_RawValue = Target.RawValue;
 
-					//start lerping toward the new value
-					if(Start is float start) Target.LerpOverTime(start, End, Time);
-					else Target.LerpOverTime(End, Time);
+					//stop any lerp in progress
+					Target.StopLerp();
+
+					//compute lerp time based on starting value
+					float time;
+					if(Start is float start)
+					{
+						//in the coroutine, 'time' is really just velocity...
+						//...we need to compute a new time value based on the difference between start and end values
+						time = Time / Mathf.Abs(start - End);
+
+						//also set the start value now
+						Target.SetRawValue(start);
+					}
+					else
+					{
+						//starting from current value - just use the unmodified time
+						time = Time;
+					}
+
+					//perform lerp
+					LerpIEnumerator = InterpolateOverTime(End, time);
+					Target.ActiveLerp = LerpIEnumerator;
+					Target.StartCoroutine(LerpIEnumerator);
 				}
 
 				public override void Undo()
 				{
-					//stop lerping
-					Target.StopAllCoroutines();
+					if(Target.ActiveLerp == LerpIEnumerator)
+					{
+						//stop lerping
+						Target.StopLerp();
 
-					//restore original raw value
-					Target.SetRawValue(i_RawValue);
+						//restore original raw value
+						Target.SetRawValue(i_RawValue);
+					}
+				}
+
+				/// <summary>
+				/// Coroutine that lerps RawValue towards targetValue over time.
+				/// </summary>
+				/// <param name="value">Value to lerp towards.</param>
+				/// <param name="time">Time in seconds to lerp from 0 to 1.</param>
+				IEnumerator InterpolateOverTime(float value, float time)
+				{
+					if(!Mathf.Approximately(Target.RawValue, value))
+					{
+						//if time is 0 or values already match, just skip to end
+						if(time > 0)
+						{
+							//lerp raw value over time
+							if(Target.RawValue < value)
+							{
+								//increase over time
+								while(Target.RawValue < value)
+								{
+									float newRawValue = Target.RawValue + (UnityEngine.Time.deltaTime / time);
+									Target.SetRawValue(Mathf.Min(newRawValue, value));
+									yield return null;
+								}
+							}
+							else
+							{
+								//decrease over time
+								while(Target.RawValue > value)
+								{
+									float newRawValue = Target.RawValue - (UnityEngine.Time.deltaTime / time);
+									Target.SetRawValue(Mathf.Max(newRawValue, value));
+									yield return null;
+								}
+							}
+						}
+					}
+
+					//set raw value directly at end
+					Target.SetRawValue(value);
+
+					//done lerping
+					Target.ActiveLerp = null;
 				}
 			}
 		}
@@ -248,7 +281,7 @@ namespace WIDVE.Graphics
 				{
 					foreach(Interpolator i in targets)
 					{
-						//notify that RawValue has changed
+						//notify that value has changed
 						i.SetRawValue(i.RawValue);
 					}
 				}
