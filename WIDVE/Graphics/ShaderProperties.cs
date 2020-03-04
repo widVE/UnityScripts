@@ -91,6 +91,9 @@ namespace WIDVE.Graphics
 		{
 			[SerializeField]
 			bool _isEnum;
+			/// <summary>
+			/// True if this float represents an enum value.
+			/// </summary>
 			public bool IsEnum
 			{
 				get => _isEnum;
@@ -114,7 +117,7 @@ namespace WIDVE.Graphics
 
 			public override float Lerp(Material m1, Material m2, float t)
 			{
-				//don't try to lerp enums - just return the value from material a
+				//don't try to lerp enums - just return the value from material 1
 				if(IsEnum) return Get(m1);
 				else return Mathf.Lerp(Get(m1), Get(m2), t);
 			}
@@ -141,7 +144,7 @@ namespace WIDVE.Graphics
 			}
 		}
 
-		[System.Serializable] //texture property can't lerp yet...
+		[System.Serializable]
 		public class TextureProperty : ShaderProperty<Texture>
 		{
 			public TextureProperty(string name, Shader shader) : base(name, shader) { }
@@ -206,7 +209,11 @@ namespace WIDVE.Graphics
 
 		void SetPropertiesFromShader()
 		{
-			if(SourceShader) SetPropertiesFromShader(SourceShader);
+			if(SourceShader)
+			{
+				int setProperties = SetPropertiesFromShader(SourceShader);
+				Debug.Log($"Found {setProperties} properties in '{SourceShader.name}.'");
+			}
 			else Debug.Log("Need to set a source shader!");
 		}
 
@@ -214,7 +221,7 @@ namespace WIDVE.Graphics
 		/// Stores all properties found in the shader.
 		/// <para>Only functions in the Editor (ShaderUtil is unavailable outside Editor).</para>
 		/// </summary>
-		void SetPropertiesFromShader(Shader shader)
+		int SetPropertiesFromShader(Shader shader)
 		{
 #if UNITY_EDITOR
 			//store properties in lists to start
@@ -300,9 +307,13 @@ namespace WIDVE.Graphics
 				FloatProperties = floatProperties.ToArray();
 				VectorProperties = vectorProperties.ToArray();
 				TextureProperties = textureProperties.ToArray();
+
+				//return the total number of properties
+				return ColorProperties.Length + FloatProperties.Length + VectorProperties.Length + TextureProperties.Length;
 			}
 #else
 			Debug.LogError("Error retrieving shader properties; Can't access ShaderUtil outside of edit mode.");
+			return 0;
 #endif
 		}
 
@@ -314,13 +325,14 @@ namespace WIDVE.Graphics
 		/// <param name="dst">Material that will have its enum values changed.</param>
 		public void SetRenderModes(Material src, Material dst)
 		{
-			//need this because MaterialPropertyBlocks don't affect rendering settings (Cull, Zwrite, etc)
+			//need to do this because MaterialPropertyBlocks don't affect rendering settings (Cull, Zwrite, etc)
 			for(int i = 0; i < FloatProperties.Length; i++)
 			{
 				//set all float properties that represent enums
 				FloatProperty fp = FloatProperties[i];
 				if(fp.IsEnum) fp.Set(dst, fp.Get(src));
 			}
+
 			//finally, set the render queue
 			dst.renderQueue = Mathf.Clamp(src.renderQueue, 0, 5000);
 		}
