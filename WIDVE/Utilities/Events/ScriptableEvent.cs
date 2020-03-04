@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace WIDVE.Utilities
 {
+	[CreateAssetMenu(fileName = nameof(ScriptableEvent), menuName = WIDVEEditor.MENU + "/" + nameof(ScriptableEvent), order = WIDVEEditor.C_ORDER)]
 	public class ScriptableEvent : ScriptableObject
 	{
 		[SerializeField]
@@ -25,7 +26,11 @@ namespace WIDVE.Utilities
 
 		public void Invoke(T t)
 		{
+			//invoke the event with args
 			Event?.Invoke(t);
+
+			//also invoke the base event in case anything is subscribed to that
+			base.Invoke();
 		}
 	}
 }
