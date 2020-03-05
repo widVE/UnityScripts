@@ -74,7 +74,6 @@ namespace WIDVE.Patterns
 				Observer observer = target as Observer;
 				SerializedProperty observee = serializedObject.FindProperty(observer.ObserveeName);
 				SerializedProperty notifyMode = serializedObject.FindProperty(nameof(_notifyMode));
-				SerializedProperty customObservers = serializedObject.FindProperty(nameof(Observer._customObservers));
 
 				//store the initial observed object
 				Object i_object = observee.objectReferenceValue;
@@ -93,6 +92,7 @@ namespace WIDVE.Patterns
 
 				//before applying any modifications, check if subscribed object has changed
 				bool changed = EditorGUI.EndChangeCheck();
+
 				if(changed)
 				{
 					//unsubscribe from old object
@@ -101,9 +101,9 @@ namespace WIDVE.Patterns
 
 				serializedObject.ApplyModifiedProperties();
 
-				//now, subscribe to the new object and notify that there was an update
 				if(changed)
 				{
+					//subscribe to the new object and notify that there was an update
 					Object newObject = observee.objectReferenceValue;
 					observer.Subscribe(newObject);
 					observer.Notify();
