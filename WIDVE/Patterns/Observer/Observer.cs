@@ -135,13 +135,18 @@ namespace WIDVE.Patterns
 					else return new IObserver<T>[0];
 
 				case NotifyModes.Custom:
-					//returns the list of observers set in the inspector
-					IObserver<T>[] customObservers = new IObserver<T>[CustomObservers.Count];
-					for(int i = 0; i < customObservers.Length; i++)
+					//returns all observers attached to objects in the custom observers list
+					List<IObserver<T>> customObservers = new List<IObserver<T>>(CustomObservers.Count);
+					for(int i = 0; i < CustomObservers.Count; i++)
 					{
-						customObservers[i] = CustomObservers[i].GetComponent<IObserver<T>>();
+						if(CustomObservers[i] == null) continue;
+						IObserver<T>[] co = CustomObservers[i].GetComponents<IObserver<T>>();
+						for(int j = 0; j < co.Length; j++)
+						{
+							customObservers.Add(co[j]);
+						}
 					}
-					return customObservers;
+					return customObservers.ToArray();
 			}
 		}
 

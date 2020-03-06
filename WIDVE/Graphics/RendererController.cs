@@ -14,7 +14,7 @@ namespace WIDVE.Graphics
 		ShaderProperties _shaderProperties;
 		protected ShaderProperties ShaderProperties => _shaderProperties;
 
-		protected enum RendererModes { Parent, Children }
+		protected enum RendererModes { Parent, Self, Children }
 		[SerializeField]
 		[Tooltip("Specifies which Renderers are affected by this object.")]
 		RendererModes _rendererMode = RendererModes.Parent;
@@ -55,20 +55,30 @@ namespace WIDVE.Graphics
 		Renderer[] GetRenderers()
 		{
 			Renderer[] renderers = new Renderer[0];
+			Renderer r;
 			switch(RendererMode)
 			{
-				default:
-				case RendererModes.Children:
-					renderers = GetComponentsInChildren<Renderer>(true);
-					break;
-
 				case RendererModes.Parent:
-					Renderer r = GetComponentInParent<Renderer>();
+					r = GetComponentInParent<Renderer>();
 					if(r != null)
 					{
 						renderers = new Renderer[1];
 						renderers[0] = r;
 					}
+					break;
+
+				default:
+				case RendererModes.Self:
+					r = GetComponent<Renderer>();
+					if(r != null)
+					{
+						renderers = new Renderer[1];
+						renderers[0] = r;
+					}
+					break;
+
+				case RendererModes.Children:
+					renderers = GetComponentsInChildren<Renderer>(true);
 					break;
 			}
 			return renderers;

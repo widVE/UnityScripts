@@ -13,7 +13,7 @@ namespace WIDVE.Utilities
 
 		[SerializeField]
 		AnimationCurve _smoothing = AnimationCurve.EaseInOut(0, 0, 1, 1);
-		public AnimationCurve Smoothing
+		public virtual AnimationCurve Smoothing
 		{
 			get => _smoothing;
 			set => _smoothing = value;
@@ -25,7 +25,7 @@ namespace WIDVE.Utilities
 		/// <summary>
 		/// The button's Value will be multiplied by this amount.
 		/// </summary>
-		public float Multiplier
+		public virtual float Multiplier
 		{
 			get => _multiplier;
 			set => _multiplier = value;
@@ -36,7 +36,7 @@ namespace WIDVE.Utilities
 		/// <summary>
 		/// When inactive, value will always return 0.
 		/// </summary>
-		public bool Active
+		public virtual bool Active
 		{
 			get => _active;
 			set => _active = value;

@@ -245,21 +245,21 @@ namespace WIDVE.Graphics
 		[CustomEditor(typeof(Interpolator))]
 		class Editor : UnityEditor.Editor
 		{
-			ReorderableList _interpolatableObjects;
+			ReorderableList InterpolatableObjects;
 
 			protected virtual void OnEnable()
 			{
-				_interpolatableObjects = new ReorderableList(serializedObject, serializedObject.FindProperty(nameof(_interpolatableObjects)),
+				InterpolatableObjects = new ReorderableList(serializedObject, serializedObject.FindProperty(nameof(_interpolatableObjects)),
 											true, true, true, true);
 
-				_interpolatableObjects.drawHeaderCallback = rect =>
+				InterpolatableObjects.drawHeaderCallback = rect =>
 				{
-					EditorGUI.LabelField(rect, "Interpolatable Objects");
+					EditorGUI.LabelField(rect, "Objects");
 				};
 
-				_interpolatableObjects.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) =>
+				InterpolatableObjects.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) =>
 				{
-					SerializedProperty element = _interpolatableObjects.serializedProperty.GetArrayElementAtIndex(index);
+					SerializedProperty element = InterpolatableObjects.serializedProperty.GetArrayElementAtIndex(index);
 					EditorGUI.PropertyField(position: new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight),
 											property: element,
 											label: new GUIContent(index.ToString()));
@@ -273,7 +273,7 @@ namespace WIDVE.Graphics
 				serializedObject.Update();
 
 				DrawDefaultInspector();
-				_interpolatableObjects.DoLayoutList();
+				InterpolatableObjects.DoLayoutList();
 
 				serializedObject.ApplyModifiedProperties();
 
