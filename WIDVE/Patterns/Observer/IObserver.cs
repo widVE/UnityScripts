@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface IObserver<T>
+namespace WIDVE.Patterns
 {
-	void OnNotify();
+	public interface IObserver<T>
+	{
+		void OnNotify();
+	}
 }
