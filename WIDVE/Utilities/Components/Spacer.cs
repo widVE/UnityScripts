@@ -10,6 +10,14 @@ namespace WIDVE.Utilities
 {
 	public abstract class Spacer : MonoBehaviour
 	{
+		public enum ObjectFindModes { Children, Custom }
+
+		[SerializeField]
+		[HideInInspector]
+		[Tooltip("Specifies which objects will be part of the automatic layout.")]
+		ObjectFindModes _objectsMode = ObjectFindModes.Children;
+		protected ObjectFindModes ObjectsMode => _objectsMode;
+
 		[SerializeField]
 		[HideInInspector]
 		List<Transform> _objects;
@@ -20,24 +28,86 @@ namespace WIDVE.Utilities
 		}
 
 		/// <summary>
+		/// Returns true if this Spacer should rotate objects, in addition to positioning them.
+		/// </summary>
+		protected abstract bool RotateObjects { get; }
+
+		/// <summary>
+		/// Returns the total number of objects being laid out.
+		/// </summary>
+		protected int NumObjects
+		{
+			get
+			{
+				switch(ObjectsMode)
+				{
+					default:
+					case ObjectFindModes.Children:
+						return transform.childCount;
+
+					case ObjectFindModes.Custom:
+						return Objects.Count;
+				}
+			}
+		}
+
+		/// <summary>
 		/// Returns the world position of the object at index.
 		/// </summary>
 		/// <param name="index">Object's index in the layout.</param>
 		/// <returns>World position of object at index.</returns>
 		public abstract Vector3 GetPosition(int index);
 
+		/// <summary>
+		/// Returns the rotation of the object at index.
+		/// </summary>
+		/// <param name="index">Object's index in the layout.</param>
+		/// <returns>Rotation of object at index.</returns>
+		public virtual Quaternion GetRotation(int index) { return Quaternion.identity; }
+
 		protected static float GetTime(int index, int numObjects)
 		{
 			return (numObjects <= 1) ? .5f : (index / (float)(numObjects - 1));
 		}
 
+		protected List<Transform> GetObjects()
+		{
+			List<Transform> objects;
+			switch(ObjectsMode)
+			{
+				default:
+				case ObjectFindModes.Children:
+					//use objects from direct children
+					objects = new List<Transform>(transform.childCount);
+					for(int i = 0; i < transform.childCount; i++)
+					{
+						objects.Add(transform.GetChild(i));
+					}
+					return objects;
+
+				case ObjectFindModes.Custom:
+					//use objects specified in inspector
+					return Objects;
+			}
+		}
+
 		public void LayoutObjects()
 		{
-			for(int i = 0; i < Objects.Count; i++)
+			//get objects
+			List<Transform> objects = GetObjects();
+
+			//layout objects
+			for(int i = 0; i < objects.Count; i++)
 			{
-				Transform t = Objects[i];
+				Transform t = objects[i];
 				if(!t) continue;
 				t.position = GetPosition(i);
+
+				//optional: rotate objects as well
+				if(RotateObjects)
+				{
+					t.rotation = GetRotation(i);
+				}
 			}
 		}
 
@@ -116,29 +186,38 @@ namespace WIDVE.Utilities
 				EditorGUI.BeginChangeCheck();
 
 				DrawDefaultInspector();
-				Objects.DoLayoutList();
 
-				//show buttons
-				if((target as Spacer).Objects.Count == 0)
+				//optionally show list of objects based on mode
+				SerializedProperty objectsMode = serializedObject.FindProperty(nameof(_objectsMode));
+				EditorGUILayout.PropertyField(objectsMode);
+				if(objectsMode.enumValueIndex == (int)ObjectFindModes.Custom)
 				{
-					if(GUILayout.Button("Load Objects From Children"))
+					Objects.DoLayoutList();
+
+					//show buttons
+					if((target as Spacer).Objects.Count == 0)
 					{
-						Undo.RecordObjects(targets, "Loaded Objects From Children");
+						if(GUILayout.Button("Load Objects From Children"))
+						{
+							Undo.RecordObjects(targets, "Loaded Objects From Children");
+							foreach(Spacer s in targets)
+							{
+								s.LoadObjectsFromChildren();
+							}
+						}
+					}
+
+					if(GUILayout.Button("Clear Objects"))
+					{
+						Undo.RecordObjects(targets, "Cleared Objects");
 						foreach(Spacer s in targets)
 						{
-							s.LoadObjectsFromChildren();
+							s.Objects.Clear();
 						}
 					}
 				}
 
-				if(GUILayout.Button("Clear Objects"))
-				{
-					Undo.RecordObjects(targets, "Cleared Objects");
-					foreach(Spacer s in targets)
-					{
-						s.Objects.Clear();
-					}
-				}
+				if(GUILayout.Button("Layout")) { /*pressing this will trigger a layout*/ }
 
 				bool changed = EditorGUI.EndChangeCheck();
 			

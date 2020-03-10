@@ -6,6 +6,8 @@ namespace WIDVE.Utilities
 {
 	public class LinearSpacer : Spacer
 	{
+		protected override bool RotateObjects => false;
+
 		[SerializeField]
 		Vector3 _start = new Vector3(0, 0, 0);
 		public Vector3 Start
