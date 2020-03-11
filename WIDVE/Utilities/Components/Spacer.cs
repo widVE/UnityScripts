@@ -91,7 +91,7 @@ namespace WIDVE.Utilities
 			}
 		}
 
-		public void LayoutObjects()
+		public virtual void LayoutObjects()
 		{
 			//get objects
 			List<Transform> objects = GetObjects();
@@ -137,14 +137,15 @@ namespace WIDVE.Utilities
 
 			//draw each middle position
 			Gizmos.color = Color.blue;
-			for(int i = 1; i < Objects.Count - 1; i++)
+			List<Transform> objects = GetObjects();
+			for(int i = 1; i < NumObjects - 1; i++)
 			{
 				Gizmos.DrawSphere(GetPosition(i), .025f);
 			}
 
 			//draw ending point
 			Gizmos.color = Color.red;
-			Gizmos.DrawSphere(GetPosition(Objects.Count - 1), .05f);
+			Gizmos.DrawSphere(GetPosition(NumObjects - 1), .05f);
 		}
 
 		[DrawGizmo(GizmoType.Active)]

@@ -16,6 +16,13 @@ namespace WIDVE.Graphics
 				//for each renderer:
 				Renderer r = Renderers[i];
 
+				//turn renderer on or off
+				if(Mathf.Approximately(alpha, 0f))
+				{
+					if(r.enabled) r.enabled = false;
+				}
+				else if(!r.enabled) r.enabled = true;
+
 				//initialize property block
 				ShaderProperties.SetProperties(MPB, r.sharedMaterial);
 
@@ -32,12 +39,6 @@ namespace WIDVE.Graphics
 		public override void SetValue(float value)
 		{
 			SetAlpha(value);
-		}
-
-		void Awake()
-		{
-			//make sure objects start fully faded in...
-			CurrentValue = 1;
 		}
 
 		void OnEnable()

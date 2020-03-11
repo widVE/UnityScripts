@@ -58,12 +58,114 @@ namespace WIDVE.Utilities
 		{
 			Vector3 initLocalScale = transform.localScale;
 			Vector3 initWorldScale = transform.lossyScale;
+
 			Vector3 adjustedLocalScale = new Vector3();
 			for(int i = 0; i < 3; i++)
 			{
 				adjustedLocalScale[i] = worldScale[i] * (initLocalScale[i] / initWorldScale[i]);
 			}
+
 			transform.localScale = adjustedLocalScale;
+		}
+
+		/// <summary>
+		/// Returns the number of children with the specified name(s).
+		/// </summary>
+		public static int CountChildrenWithName(this Transform transform, params string[] countNames)
+		{
+			int count = 0;
+
+			for(int i = transform.childCount - 1; i >= 0; i--)
+			{
+				Transform t = transform.GetChild(i);
+
+				for(int j = 0; j < countNames.Length; j++)
+				{
+					if(t.name == countNames[j])
+					{
+						count++;
+						break;
+					}
+				}
+			}
+
+			return count;
+		}
+
+		/// <summary>
+		/// Returns the number of children with the specified tag(s).
+		/// </summary>
+		public static int CountChildrenWithTag(this Transform transform, params string[] countTags)
+		{
+			int count = 0;
+
+			for(int i = transform.childCount - 1; i >= 0; i--)
+			{
+				Transform t = transform.GetChild(i);
+
+				for(int j = 0; j < countTags.Length; j++)
+				{
+					if(t.CompareTag(countTags[j]))
+					{
+						count++;
+						break;
+					}
+				}
+			}
+
+			return count;
+		}
+
+		/// <summary>
+		/// Deletes all direct children with the specified name(s).
+		/// </summary>
+		public static void DeleteChildrenWithName(this Transform transform, params string[] deleteNames)
+		{
+			for(int i = transform.childCount - 1; i >= 0; i--)
+			{
+				Transform t = transform.GetChild(i);
+
+				bool tMustDie = false;
+				for(int j = 0; j < deleteNames.Length; j++)
+				{
+					if(t.name == deleteNames[j])
+					{
+						tMustDie = true;
+						break;
+					}
+				}
+
+				if(tMustDie)
+				{
+					Object.DestroyImmediate(t.gameObject);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Deletes all direct children with the specified tag(s).
+		/// </summary>
+		public static void DeleteChildrenWithTag(this Transform transform, params string[] deleteTags)
+		{
+			for(int i = transform.childCount - 1; i >= 0; i--)
+			{
+				Transform t = transform.GetChild(i);
+
+				bool tMustDie = false;
+				for(int j = 0; j < deleteTags.Length; j++)
+				{
+					if(t.CompareTag(deleteTags[j]))
+					{
+						tMustDie = true;
+						break;
+					}
+				}
+
+				if(tMustDie)
+				{
+					Object.DestroyImmediate(t.gameObject);
+				}
+			}
 		}
 	}
 }

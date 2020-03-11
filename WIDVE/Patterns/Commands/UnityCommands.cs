@@ -18,12 +18,16 @@ namespace WIDVE.Patterns
 
 			public override void Execute()
 			{
+				if(!Target) return;
+
 				i_Enabled = Target.enabled;
 				Target.enabled = Enabled;
 			}
 
 			public override void Undo()
 			{
+				if(!Target) return;
+
 				Target.enabled = i_Enabled;
 			}
 		}
@@ -40,12 +44,16 @@ namespace WIDVE.Patterns
 
 			public override void Execute()
 			{
+				if(!Target) return;
+
 				i_Active = Target.activeSelf;
 				Target.SetActive(Active);
 			}
 
 			public override void Undo()
 			{
+				if(!Target) return;
+
 				Target.SetActive(i_Active);
 			}
 		}
@@ -62,12 +70,16 @@ namespace WIDVE.Patterns
 
 			public override void Execute()
 			{
+				if(!Target) return;
+
 				i_Flags = Target.hideFlags;
 				Target.hideFlags = Flags;
 			}
 
 			public override void Undo()
 			{
+				if(!Target) return;
+
 				Target.hideFlags = i_Flags;
 			}
 		}

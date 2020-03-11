@@ -55,26 +55,29 @@ namespace WIDVE.Graphics
 		/// <summary>
 		/// Sets the RawValue of this Interpolator and invokes the value changed events.
 		/// </summary>
-		public void SetRawValue(float rawValue)
+		public void SetRawValue(float rawValue, bool notify = true)
 		{
 			_rawValue = Mathf.Clamp01(rawValue);
 
-			//invoke value changed events for any scripts that use them
-			RawValueChanged?.Invoke(RawValue);
-			ValueChanged?.Invoke(Value);
-
-			//let attached objects know that value has changed as well
-			for(int i = 0; i < InterpolatableObjects.Count; i++)
+			if(notify)
 			{
-				GameObject io = InterpolatableObjects[i];
-				if(!io || !io.activeInHierarchy) continue;
+				//invoke value changed events for any scripts that use them
+				RawValueChanged?.Invoke(RawValue);
+				ValueChanged?.Invoke(Value);
 
-				//access the IInterpolatable interface from attached GameObjects
-				//test if this is actually faster than just calling GetComponent every time...
-				if(InterfaceCache.Get<IInterpolatable>(io) is IInterpolatable ii)
+				//let attached objects know that value has changed as well
+				for(int i = 0; i < InterpolatableObjects.Count; i++)
 				{
-					if(!ii.IsActive()) continue;
-					ii.SetValue(Value);
+					GameObject io = InterpolatableObjects[i];
+					if(!io || !io.activeInHierarchy) continue;
+
+					//access the IInterpolatable interface from attached GameObjects
+					//test if this is actually faster than just calling GetComponent every time...
+					if(InterfaceCache.Get<IInterpolatable>(io) is IInterpolatable ii)
+					{
+						if(!ii.IsActive()) continue;
+						ii.SetValue(Value);
+					}
 				}
 			}
 		}
