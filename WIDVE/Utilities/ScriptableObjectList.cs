@@ -9,53 +9,33 @@ using UnityEditorInternal;
 namespace WIDVE.Utilities
 {
 	/// <summary>
-	/// ScriptableObject that contains a reorderable list of other ScriptableObject.
-	/// <para>Any derived classes must exist in their own script file, or Unity will not be able to serialize them.</para>
+	/// Lists should inherit from the generic ScriptableObjectList.
 	/// </summary>
-	public abstract class ScriptableObjectList<T> : ScriptableObject, IEnumerable where T : ScriptableObject
+	public abstract class ScriptableObjectList : ScriptableObject
 	{
-		// Since Unity can't serialize generics, a serialized List<T> must exist in the child class.
-		// Access this list using the following properties:
-
 		/// <summary>
 		/// The name of the underlying serialized field used by the Objects property.
 		/// <para>Needed when creating the reorderable list in the editor.</para>
+		/// <para>The list should have the HideInInspector attribute, or it will be drawn twice.</para>
 		/// </summary>
 		protected abstract string SerializedListName { get; }
 
 		/// <summary>
-		/// Access the underlying serailized list.
+		/// List name to display in the inspector.
 		/// </summary>
-		protected abstract List<T> Objects { get; }
+		protected abstract string GetListDisplayName();
 
 		/// <summary>
-		/// Number of elements in the list.
+		/// Element name to display in the inspector.
 		/// </summary>
-		public int Count => Objects.Count;
-
-		/// <summary>
-		/// Access list elements by index.
-		/// </summary>
-		public T this[int index]
-		{
-			get => Objects[index];
-			set => Objects[index] = value;
-		}
-
-		/// <summary>
-		/// Need this when using foreach loops and other functions.
-		/// </summary>
-		public IEnumerator GetEnumerator()
-		{
-			return Objects.GetEnumerator();
-		}
+		protected abstract string GetElementDisplayName(int index);
 
 #if UNITY_EDITOR
 		/// <summary>
 		/// Custom editor that draws list contents as a reorderable list.
-		/// <para>Extend this editor in any derived classes.</para>
 		/// </summary>
-		public abstract class Editor : UnityEditor.Editor
+		[CustomEditor(typeof(ScriptableObjectList), true)]
+		protected class Editor : UnityEditor.Editor
 		{
 			ReorderableList List;
 
@@ -64,7 +44,7 @@ namespace WIDVE.Utilities
 			/// </summary>
 			protected virtual void OnEnable()
 			{
-				ScriptableObjectList<T> sol = target as ScriptableObjectList<T>;
+				ScriptableObjectList sol = target as ScriptableObjectList;
 
 				List = new ReorderableList(serializedObject,
 										   serializedObject.FindProperty(sol.SerializedListName),
@@ -72,7 +52,7 @@ namespace WIDVE.Utilities
 
 				List.drawHeaderCallback = rect =>
 				{
-					EditorGUI.LabelField(rect, GetListName());
+					EditorGUI.LabelField(rect, sol.GetListDisplayName());
 				};
 
 				List.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) =>
@@ -80,7 +60,7 @@ namespace WIDVE.Utilities
 					SerializedProperty element = List.serializedProperty.GetArrayElementAtIndex(index);
 					EditorGUI.PropertyField(position: new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight),
 											property: element,
-											label: new GUIContent(GetElementName(element, index)));
+											label: new GUIContent(sol.GetElementDisplayName(index)));
 				};
 			}
 
@@ -90,20 +70,54 @@ namespace WIDVE.Utilities
 			public override void OnInspectorGUI()
 			{
 				serializedObject.Update();
+
+				DrawDefaultInspector();
 				List.DoLayoutList();
+
 				serializedObject.ApplyModifiedProperties();
-			}
-
-			protected virtual string GetListName()
-			{
-				return $"{typeof(T).Name} List";
-			}
-
-			protected virtual string GetElementName(SerializedProperty element, int index)
-			{
-				return $"{typeof(T).Name} {index}";
-			}
+			}		
 		}
 #endif
+	}
+
+	/// <summary>
+	/// ScriptableObject that contains a reorderable list of other ScriptableObjects.
+	/// <para>Any derived classes must exist in their own script file, or Unity will not be able to serialize them.</para>
+	/// </summary>
+	public abstract class ScriptableObjectList<T> : ScriptableObjectList, IEnumerable where T : ScriptableObject
+	{
+		// Since Unity can't serialize generics, a serialized List<T> must exist in the child class.
+		// Access this list using the following properties:
+
+		/// <summary>
+		/// Access the underlying serialized list.
+		/// </summary>
+		protected abstract List<T> Objects { get; }
+
+		/// <summary>
+		/// Number of elements in the list.
+		/// </summary>
+		public int Count => Objects.Count;
+
+		public T this[int index]
+		{
+			get => Objects[index];
+			set => Objects[index] = value;
+		}
+
+		public IEnumerator GetEnumerator()
+		{
+			return Objects.GetEnumerator();
+		}
+
+		protected override string GetListDisplayName()
+		{
+			return $"{typeof(T).Name} List";
+		}
+
+		protected override string GetElementDisplayName(int index)
+		{
+			return $"{typeof(T).Name} {index}";
+		}
 	}
 }

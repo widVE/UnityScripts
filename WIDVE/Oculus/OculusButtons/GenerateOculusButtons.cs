@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using WIDVE.Utilities;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
-namespace WIDVE.Utilities
+namespace WIDVE.Oculus
 {
 	static class GenerateOculusButtons
 	{

@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using WIDVE.Utilities;
 
-namespace WIDVE.Utilities
+namespace WIDVE.Oculus
 {
 	[CreateAssetMenu(fileName = nameof(OculusButton), menuName = MENU_NAME + "/" + nameof(OculusButton), order = MENU_ORDER)]
 	public class OculusButton : ButtonFloat

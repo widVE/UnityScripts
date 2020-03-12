@@ -17,6 +17,7 @@ namespace WIDVE.Utilities
 		int ActiveSceneIndex => _activeSceneIndex;
 
 		[SerializeField]
+		[HideInInspector]
 		List<SceneObject> _objects = new List<SceneObject>();
 		protected override List<SceneObject> Objects => _objects ?? (_objects = new List<SceneObject>());
 		protected override string SerializedListName => nameof(_objects);
@@ -64,24 +65,9 @@ namespace WIDVE.Utilities
 			}
 		}
 
-#if UNITY_EDITOR
-		[CustomEditor(typeof(SceneObjectList))]
-		new public class Editor : ScriptableObjectList<SceneObject>.Editor
+		protected override string GetElementDisplayName(int index)
 		{
-			public override void OnInspectorGUI()
-			{
-				serializedObject.Update();
-				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_activeSceneIndex)));
-				serializedObject.ApplyModifiedProperties();
-
-				base.OnInspectorGUI();
-			}
-
-			protected override string GetElementName(SerializedProperty element, int index)
-			{
-				return $"{typeof(Scene).Name} {index}{(index == (target as SceneObjectList).ActiveSceneIndex ? " [Active]" : string.Empty)}";
-			}
+			return $"{typeof(Scene).Name} {index}{(index == ActiveSceneIndex ? " [Active]" : string.Empty)}";
 		}
-#endif
 	}
 }
