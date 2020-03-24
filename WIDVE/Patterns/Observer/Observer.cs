@@ -36,7 +36,11 @@ namespace WIDVE.Patterns
 		/// Subscribe during OnEnable.
 		/// <para>Observers should have the ExecuteAlways attribute.</para>
 		/// </summary>
-		protected abstract void OnEnable();
+		protected virtual void OnEnable()
+		{
+			//update when re-enabled
+			Notify();
+		}
 
 		/// <summary>
 		/// Unsubscribe during OnDisable.

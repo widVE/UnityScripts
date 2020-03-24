@@ -27,6 +27,8 @@ namespace WIDVE.Paths
 
 		protected override void OnEnable()
 		{
+			base.OnEnable();
+
 			Subscribe(Path);
 		}
 

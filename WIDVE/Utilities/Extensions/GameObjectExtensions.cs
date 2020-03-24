@@ -227,5 +227,83 @@ namespace WIDVE.Utilities
 			}
 			return instance;
 		}
+
+		public enum SearchModes { Parent, Parents, Self, Child, Children, Custom }
+
+		public static T[] GetComponentsInHierarchy<T>(this GameObject gameObject, SearchModes mode, List<GameObject> customObjects = null)
+		{
+			T[] components;
+
+			switch(mode)
+			{
+				case SearchModes.Parent:
+					//return the first component found in parent
+					T parentComponent = gameObject.GetComponentInParent<T>();
+					if(parentComponent != null)
+					{
+						components = new T[1];
+						components[0] = parentComponent;
+					}
+					else
+					{
+						components = new T[0];
+					}
+					break;
+
+				case SearchModes.Parents:
+					//return all components found in parent
+					components = gameObject.GetComponentsInParent<T>();
+					break;
+
+				default:
+				case SearchModes.Self:
+					//just return the components on this object
+					components = gameObject.GetComponents<T>();
+					break;
+
+				case SearchModes.Child:
+					//return the first component found in children
+					T childComponent = gameObject.GetComponentInChildren<T>();
+					if(childComponent != null)
+					{
+						components = new T[1];
+						components[0] = childComponent;
+					}
+					else
+					{
+						components = new T[0];
+					}
+					break;
+
+				case SearchModes.Children:
+					//return all components found in children
+					components = gameObject.GetComponentsInChildren<T>();
+					break;
+
+				case SearchModes.Custom:
+					//return all components attached to objects in the custom list
+					if(customObjects == null)
+					{
+						components = new T[0];
+					}
+					else
+					{
+						List<T> customTs = new List<T>(customObjects.Count);
+						for(int i = 0; i < customObjects.Count; i++)
+						{
+							if(customObjects[i] == null) continue;
+							T[] coTs = customObjects[i].GetComponents<T>();
+							for(int j = 0; j < coTs.Length; j++)
+							{
+								customTs.Add(coTs[j]);
+							}
+						}
+						components = customTs.ToArray();
+					}
+					break;
+			}
+
+			return components;
+		}
 	}
 }
