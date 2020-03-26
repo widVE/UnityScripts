@@ -126,7 +126,6 @@ namespace WIDVE.Utilities
 			else return $"{index}: {Objects[index].name}";
 		}
 
-#if UNITY_EDITOR
 		protected virtual void DrawGizmos()
 		{
 			Gizmos.matrix = Matrix4x4.identity;
@@ -148,6 +147,7 @@ namespace WIDVE.Utilities
 			Gizmos.DrawSphere(GetPosition(NumObjects - 1), .05f);
 		}
 
+#if UNITY_EDITOR
 		[DrawGizmo(GizmoType.Active)]
 		static void DrawGizmos(Spacer spacer, GizmoType gizmoType)
 		{

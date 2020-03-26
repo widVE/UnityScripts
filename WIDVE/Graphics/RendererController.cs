@@ -98,6 +98,7 @@ namespace WIDVE.Graphics
 				base.OnInspectorGUI();
 
 				bool somethingChanged = EditorGUI.EndChangeCheck();
+
 				if(somethingChanged)
 				{
 					foreach(RendererController rc in targets)

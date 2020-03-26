@@ -44,5 +44,18 @@ namespace WIDVE.Utilities
 			//position is just a simple lerp
 			return Vector3.Lerp(start, end, GetTime(index, numObjects));
 		}
+
+		protected override void DrawGizmos()
+		{
+			Gizmos.matrix = Matrix4x4.identity;
+
+			Gizmos.color = Color.grey;
+
+			Vector3 start = transform.position + transform.TransformPoint(Start);
+			Vector3 end = transform.position + transform.TransformPoint(End);
+			Gizmos.DrawLine(start, end);
+
+			base.DrawGizmos();
+		}
 	}
 }
