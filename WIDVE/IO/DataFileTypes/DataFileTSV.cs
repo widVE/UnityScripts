@@ -1,9 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using WIDVE.Utilities;
 
-namespace WIDVE.DataCollection
+namespace WIDVE.IO
 {
 	[CreateAssetMenu(fileName = nameof(DataFileTSV), menuName = nameof(DataFile) + "/" + nameof(DataFileTSV), order = WIDVEEditor.C_ORDER)]
 	public class DataFileTSV : DataFileCSV

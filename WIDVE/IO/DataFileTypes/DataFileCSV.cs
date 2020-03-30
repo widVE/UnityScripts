@@ -4,7 +4,7 @@ using UnityEngine;
 using System.IO;
 using WIDVE.Utilities;
 
-namespace WIDVE.DataCollection
+namespace WIDVE.IO
 {
 	[CreateAssetMenu(fileName = nameof(DataFileCSV), menuName = nameof(DataFile) + "/" + nameof(DataFileCSV), order = WIDVEEditor.C_ORDER)]
 	public class DataFileCSV : DataFileText

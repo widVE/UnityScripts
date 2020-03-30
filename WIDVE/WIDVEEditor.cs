@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace WIDVE.Utilities
+namespace WIDVE
 {
 	/// <summary>
 	/// Holds statics and constants for use with Editor scripts.

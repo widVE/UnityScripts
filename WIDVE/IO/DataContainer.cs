@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace WIDVE.DataCollection
+namespace WIDVE.IO
 {
 	/// <summary>
 	/// Struct that stores a single piece of readonly data.

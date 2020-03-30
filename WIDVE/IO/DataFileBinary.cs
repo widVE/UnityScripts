@@ -6,7 +6,7 @@ using System.IO;
 using UnityEditor;
 #endif
 
-namespace WIDVE.DataCollection
+namespace WIDVE.IO
 {
 	public abstract class DataFileBinary : DataFile
 	{

@@ -6,7 +6,7 @@ using System.IO;
 using UnityEditor;
 #endif
 
-namespace WIDVE.DataCollection
+namespace WIDVE.IO
 {
 	public abstract class DataFile : ScriptableObject
 	{
@@ -82,6 +82,7 @@ namespace WIDVE.DataCollection
 		public enum FolderTypes { Absolute, RelativeToApplicationDataPath, RelativeToPersistentDataPath }
 
 		[SerializeField]
+		//[HideInInspector]
 		[Tooltip("Specifies the root of the folder path.")]
 		FolderTypes _folderType = FolderTypes.RelativeToApplicationDataPath;
 		/// <summary>
@@ -99,6 +100,7 @@ namespace WIDVE.DataCollection
 		}
 
 		[SerializeField]
+		//[HideInInspector]
 		[Tooltip("Folder where the file is located.")]
 		string _folder = string.Empty;
 		/// <summary>
@@ -124,11 +126,13 @@ namespace WIDVE.DataCollection
 		}
 
 		[SerializeField]
+		//[HideInInspector]
 		[Tooltip("Create the folder if it does not exist?")]
 		bool _createFolder = true;
 		bool CreateFolder => _createFolder;
 
 		[SerializeField]
+		//[HideInInspector]
 		[Tooltip("Filename, with or without extension.")]
 		string _filename = DEFAULT_FILENAME;
 		/// <summary>
@@ -219,6 +223,7 @@ namespace WIDVE.DataCollection
 		public enum WriteModes { AlwaysOverwrite, OverwriteThenAppend, Append, ReadOnly }
 
 		[SerializeField]
+		//[HideInInspector]
 		[Tooltip("AlwaysOverwrite: File will be overwritten each write.\n" +
 				 "OverwriteThenAppend: File will be overwritten on first write, then appended afterwards.\n" +
 				 "Append: File will be appended each write.\n" +
@@ -302,12 +307,21 @@ namespace WIDVE.DataCollection
 		public virtual void WriteData(DataContainer[][] buffer) { }
 
 #if UNITY_EDITOR
+		protected virtual void DrawExtension(SerializedObject serializedObject)
+		{
+			GUI.enabled = false;
+			EditorGUILayout.TextField(label: nameof(Extension), text: Extension);
+			GUI.enabled = true;
+		}
+
 		[CanEditMultipleObjects]
-		[CustomEditor(typeof(DataFile), true)]
+		//[CustomEditor(typeof(DataFile), true)]
 		public abstract class Editor : UnityEditor.Editor
 		{
 			public override void OnInspectorGUI()
 			{
+				DataFile dataFile = target as DataFile;
+
 				serializedObject.Update();
 
 				EditorGUI.BeginChangeCheck();
@@ -316,18 +330,24 @@ namespace WIDVE.DataCollection
 				//EditorGUILayout.ObjectField("Script", target, target.GetType(), false);
 				GUI.enabled = true;
 
-				EditorGUILayout.LabelField(target.GetType().Name, EditorStyles.boldLabel);
+				//EditorGUILayout.LabelField(target.GetType().Name, EditorStyles.boldLabel);
 
-				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_folderType)));
-				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_createFolder)));
-				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_folder)));
-				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_filename)));
+				//these fields are hidden by default so they don't get draw twice
+				//EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_folderType)));
 
-				GUI.enabled = false;
-				EditorGUILayout.TextField(label: nameof(Extension), text: (target as DataFile).Extension);
-				GUI.enabled = true;
+				//don't draw create folder if file is read only...
+				//EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_createFolder)));
 
-				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_writeMode)));
+				//EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_folder)));
+				//EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_filename)));
+
+				//draw the extension - this may be handled differently by child classes
+				//dataFile.DrawExtension(serializedObject);
+
+				//EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_writeMode)));
+
+				//draw any other fields
+				//DrawDefaultInspector();
 
 				bool changed = EditorGUI.EndChangeCheck();
 

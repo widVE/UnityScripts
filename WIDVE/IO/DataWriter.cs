@@ -7,7 +7,7 @@ using UnityEditor;
 using UnityEditorInternal;
 #endif
 
-namespace WIDVE.DataCollection
+namespace WIDVE.IO
 {
 	public class DataWriter : MonoBehaviour
 	{
