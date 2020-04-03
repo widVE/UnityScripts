@@ -82,7 +82,7 @@ namespace WIDVE.IO
 		public enum FolderTypes { Absolute, RelativeToApplicationDataPath, RelativeToPersistentDataPath }
 
 		[SerializeField]
-		//[HideInInspector]
+		[HideInInspector]
 		[Tooltip("Specifies the root of the folder path.")]
 		FolderTypes _folderType = FolderTypes.RelativeToApplicationDataPath;
 		/// <summary>
@@ -100,7 +100,7 @@ namespace WIDVE.IO
 		}
 
 		[SerializeField]
-		//[HideInInspector]
+		[HideInInspector]
 		[Tooltip("Folder where the file is located.")]
 		string _folder = string.Empty;
 		/// <summary>
@@ -126,13 +126,13 @@ namespace WIDVE.IO
 		}
 
 		[SerializeField]
-		//[HideInInspector]
+		[HideInInspector]
 		[Tooltip("Create the folder if it does not exist?")]
 		bool _createFolder = true;
 		bool CreateFolder => _createFolder;
 
 		[SerializeField]
-		//[HideInInspector]
+		[HideInInspector]
 		[Tooltip("Filename, with or without extension.")]
 		string _filename = DEFAULT_FILENAME;
 		/// <summary>
@@ -223,7 +223,7 @@ namespace WIDVE.IO
 		public enum WriteModes { AlwaysOverwrite, OverwriteThenAppend, Append, ReadOnly }
 
 		[SerializeField]
-		//[HideInInspector]
+		[HideInInspector]
 		[Tooltip("AlwaysOverwrite: File will be overwritten each write.\n" +
 				 "OverwriteThenAppend: File will be overwritten on first write, then appended afterwards.\n" +
 				 "Append: File will be appended each write.\n" +
@@ -315,8 +315,8 @@ namespace WIDVE.IO
 		}
 
 		[CanEditMultipleObjects]
-		//[CustomEditor(typeof(DataFile), true)]
-		public abstract class Editor : UnityEditor.Editor
+		[CustomEditor(typeof(DataFile), true)]
+		public class Editor : UnityEditor.Editor
 		{
 			public override void OnInspectorGUI()
 			{
@@ -324,30 +324,31 @@ namespace WIDVE.IO
 
 				serializedObject.Update();
 
+				SerializedProperty writeMode = serializedObject.FindProperty(nameof(_writeMode));
+
 				EditorGUI.BeginChangeCheck();
 
-				GUI.enabled = false;
-				//EditorGUILayout.ObjectField("Script", target, target.GetType(), false);
-				GUI.enabled = true;
-
-				//EditorGUILayout.LabelField(target.GetType().Name, EditorStyles.boldLabel);
+				EditorGUILayout.LabelField(target.GetType().Name, EditorStyles.boldLabel);
+				
+				//draw any non-hidden fields from child classes
+				DrawDefaultInspector();
 
 				//these fields are hidden by default so they don't get draw twice
-				//EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_folderType)));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_folderType)));
 
 				//don't draw create folder if file is read only...
-				//EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_createFolder)));
+				if(writeMode.enumValueIndex != (int)WriteModes.ReadOnly)
+				{
+					EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_createFolder)));
+				}
 
-				//EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_folder)));
-				//EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_filename)));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_folder)));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_filename)));
 
 				//draw the extension - this may be handled differently by child classes
-				//dataFile.DrawExtension(serializedObject);
+				dataFile.DrawExtension(serializedObject);
 
-				//EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_writeMode)));
-
-				//draw any other fields
-				//DrawDefaultInspector();
+				EditorGUILayout.PropertyField(writeMode);
 
 				bool changed = EditorGUI.EndChangeCheck();
 

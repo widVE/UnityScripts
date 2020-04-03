@@ -11,7 +11,7 @@ namespace WIDVE.IO
     public class DataFileTXT : DataFileText
     {
         [SerializeField]
-        //[HideInInspector]
+        [HideInInspector]
         string _extension = ".txt";
 
         public override string Extension => _extension;

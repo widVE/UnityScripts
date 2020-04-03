@@ -73,8 +73,11 @@ namespace WIDVE.Utilities
 				return;
 			}
 
+			//set the active scene once it has loaded
 			SceneObject.SceneObjectLoaded += CheckActiveSceneOnLoad;
+
 			Scenes.LoadAll(Mode, SceneLoadHistory);
+
 			Loaded = true;
 		}
 
@@ -90,18 +93,23 @@ namespace WIDVE.Utilities
 			}
 
 			Scenes.UnloadAll(Mode, SceneLoadHistory);
+
 			Loaded = false;
 		}
 
 		void CheckActiveSceneOnLoad(Scene scene, LoadSceneMode loadSceneMode)
-		{	//set the active scene if it was loaded
+		{
+			//set the active scene if it was loaded
 			if(Scenes.ActiveScene == null)
-			{   //no active scene specified, so stop checking
+			{
+				//no active scene specified, so stop checking
 				SceneObject.SceneObjectLoaded -= CheckActiveSceneOnLoad;
 			}
+
 			else if(scene == Scenes.ActiveScene.GetScene())
 			{
 				SceneManager.SetActiveScene(scene);
+
 				//active scene has been set, so done checking
 				SceneObject.SceneObjectLoaded -= CheckActiveSceneOnLoad;
 			}
@@ -143,30 +151,32 @@ namespace WIDVE.Utilities
 
 #if UNITY_EDITOR
 		[CanEditMultipleObjects]
-		[CustomEditor(typeof(SceneLoader))]
+		[CustomEditor(typeof(SceneLoader), true)]
 		public class Editor : UnityEditor.Editor
 		{
 			public override void OnInspectorGUI()
 			{
 				base.OnInspectorGUI();
 
+				GUILayout.BeginHorizontal();
+
 				if (GUILayout.Button("Load"))
 				{
-					foreach(Object t in targets)
+					foreach(SceneLoader sl in targets)
 					{
-						SceneLoader sl = t as SceneLoader;
 						sl.Load();
 					}
 				}
 
 				if (GUILayout.Button("Unload"))
 				{
-					foreach(Object t in targets)
+					foreach(SceneLoader sl in targets)
 					{
-						SceneLoader sl = t as SceneLoader;
 						sl.Unload();
 					}
 				}
+
+				GUILayout.EndHorizontal();
 			}
 		}
 #endif

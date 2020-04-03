@@ -105,6 +105,21 @@ namespace WIDVE.Utilities
 			set => Objects[index] = value;
 		}
 
+		public void Add(T t)
+		{
+			Objects.Add(t);
+		}
+
+		public bool Remove(T t)
+		{
+			return Objects.Remove(t);
+		}
+
+		public void RemoveAt(int index)
+		{
+			Objects.RemoveAt(index);
+		}
+
 		public IEnumerator GetEnumerator()
 		{
 			return Objects.GetEnumerator();
