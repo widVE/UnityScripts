@@ -1,10 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using WIDVE.Utilities;
 
 namespace WIDVE.Graphics
 {
-	public class Highlighter : MonoBehaviour
+	public class Highlighter : MonoBehaviour, IHighlightable
 	{
 		[SerializeField]
 		Interpolator _interpolator;
@@ -26,6 +27,16 @@ namespace WIDVE.Graphics
 
 			if(activate) Interpolator.LerpTo1(ActivationTime);
 			else Interpolator.LerpTo0(DeactivationTime);
+		}
+
+		public void StartHighlight(Selector selector)
+		{
+			Highlight(true);
+		}
+
+		public void EndHighlight()
+		{
+			Highlight(false);
 		}
 	}
 }

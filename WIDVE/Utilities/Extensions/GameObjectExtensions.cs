@@ -21,67 +21,91 @@ namespace WIDVE.Utilities
 		/// Returns the environment this GameObject exists in.
 		/// </summary>
 		public static GameObjectEnvironments GetGameObjectEnvironment(this GameObject gameObject)
-		{   //https://github.com/Unity-Technologies/PrefabAPIExamples/blob/master/Assets/Scripts/GameObjectTypeLogging.cs
+		{
+			//based on https://github.com/Unity-Technologies/PrefabAPIExamples/blob/master/Assets/Scripts/GameObjectTypeLogging.cs
+			//most comments also from there
+
 			GameObjectEnvironments environment;
+
 #if UNITY_EDITOR
+			//check if game object exists on disk
 			if (EditorUtility.IsPersistent(gameObject))
-			{	//game object exists on disk
+			{
 				if (!PrefabUtility.IsPartOfPrefabAsset(gameObject))
-				{   //The GameObject is a temporary object created during import.
+				{
+					//The GameObject is a temporary object created during import.
 					//OnValidate() is called two times with a temporary object during import:
 					//	First time is when saving cloned objects to .prefab file.
 					//	Second event is when reading .prefab file objects during import
 					environment = GameObjectEnvironments.PrefabImport;
 				}
 				else
-				{   //GameObject is part of an imported Prefab Asset (from the Library folder)
+				{
+					//GameObject is part of an imported Prefab Asset (from the Library folder)
 					environment = GameObjectEnvironments.PrefabAsset;
 				}
 			}
+
 			else
-			{	//If the GameObject is not persistent let's determine which stage we are in first because getting Prefab info depends on it
+			{
+				//If the GameObject is not persistent let's determine which stage we are in first because getting Prefab info depends on it
 				StageHandle mainStage = StageUtility.GetMainStageHandle();
 				StageHandle currentStage = StageUtility.GetStageHandle(gameObject);
+
 				if (currentStage == mainStage)
-				{	//viewing scenes in the main stage (aka -not- editing in prefab mode)
+				{
+					//viewing scenes in the main stage (aka -not- editing in prefab mode)
 					if (PrefabUtility.IsPartOfPrefabInstance(gameObject))
-					{	//GameObject is part of a Prefab Instance in the MainStage
+					{
+						//GameObject is part of a Prefab Instance in the MainStage
 						environment = GameObjectEnvironments.PrefabInstance;
 					}
 					else
-					{	//GameObject is a plain GameObject in the MainStage
+					{
+						//GameObject is a plain GameObject in the MainStage
 						environment = GameObjectEnvironments.Scene;
 					}
 				}
+
 				else
-				{	//editing a prefab in prefab mode
+				{
+					//editing a prefab in prefab mode
 					PrefabStage prefabStage = PrefabStageUtility.GetPrefabStage(gameObject);
+
 					if (prefabStage != null)
 					{
 						if (PrefabUtility.IsPartOfPrefabInstance(gameObject))
-						{	//GameObject is in a PrefabStage and is nested.
+						{
+							//GameObject is in a PrefabStage and is nested.
 							environment = GameObjectEnvironments.NestedPrefabStage;
 						}
 						else
-						{	//GameObject is in a PrefabStage.
+						{
+							//GameObject is in a PrefabStage.
 							environment = GameObjectEnvironments.PrefabStage;
 						}
 					}
+
 					else if (EditorSceneManager.IsPreviewSceneObject(gameObject))
-					{   //GameObject is not in the MainStage, nor in a PrefabStage.
+					{
+						//GameObject is not in the MainStage, nor in a PrefabStage.
 						//But it is in a PreviewScene so could be used for Preview rendering or other utilities.
 						environment = GameObjectEnvironments.PreviewScene;
 					}
+
 					else
-					{   //Unknown GameObject Info
+					{
+						//Unknown GameObject Info
 						environment = GameObjectEnvironments.Unknown;
 					}
 				}
 			}
+
 #else
-			//Can't really check outside editor...
+			//Can't do any of the above checks outside of the editor
 			environment = GameObjectEnvironments.Unknown;
 #endif
+
 			return environment;
 		}
 		
@@ -92,7 +116,9 @@ namespace WIDVE.Utilities
 		public static bool ExistsInScene(this GameObject gameObject)
 		{
 			bool inScene;
+
 			GameObjectEnvironments environment = gameObject.GetGameObjectEnvironment();
+
 			switch (environment)
 			{
 				default:
@@ -100,6 +126,7 @@ namespace WIDVE.Utilities
 				case GameObjectEnvironments.PrefabInstance:
 					inScene = true;
 					break;
+
 				case GameObjectEnvironments.PrefabAsset:
 				case GameObjectEnvironments.PrefabStage:
 				case GameObjectEnvironments.NestedPrefabStage:
@@ -108,6 +135,7 @@ namespace WIDVE.Utilities
 					inScene = false;
 					break;
 			}
+
 			return inScene;
 		}
 
@@ -118,6 +146,7 @@ namespace WIDVE.Utilities
 		public static bool IsSelected(this GameObject gameObject)
 		{
 			bool isSelected = false;
+
 #if UNITY_EDITOR
 			Object[] selectedObjects = UnityEditor.Selection.GetFiltered(typeof(GameObject), SelectionMode.Deep);
 			for(int i = 0; i < selectedObjects.Length; i++)
@@ -129,6 +158,7 @@ namespace WIDVE.Utilities
 				}
 			}
 #endif
+
 			return isSelected;
 		}
 
@@ -139,6 +169,7 @@ namespace WIDVE.Utilities
 		public static bool IsTopLevelSelection(this GameObject gameObject)
 		{
 			bool isTopLevelSelection = false;
+
 #if UNITY_EDITOR
 			Object[] topLevelObjects = UnityEditor.Selection.GetFiltered(typeof(GameObject), SelectionMode.TopLevel);
 			for(int i = 0; i < topLevelObjects.Length; i++)
@@ -150,6 +181,7 @@ namespace WIDVE.Utilities
 				}
 			}
 #endif
+
 			return isTopLevelSelection;
 		}
 
@@ -208,29 +240,64 @@ namespace WIDVE.Utilities
 		public static Object InstantiatePrefab(this GameObject gameObject, Object prefab, bool keepPrefabConnection = true, bool keepPrefabTransform = false)
 		{
 			Object instance = null;
+
 			if (!keepPrefabConnection || Application.isPlaying)
-			{	//instantiate the object without a prefab connection
+			{
+				//instantiate the object without a prefab connection
 				instance = Object.Instantiate(original: prefab, parent: gameObject.transform);			
 			}
+
 #if UNITY_EDITOR
 			else
-			{	//instantiate the object and keep the prefab connection
+			{
+				//instantiate the object and keep the prefab connection
 				instance = PrefabUtility.InstantiatePrefab(assetComponentOrGameObject: prefab, parent: gameObject.transform);
 			}
 #endif
+
 			if (keepPrefabTransform && instance != null)
-			{	//keep same world position, rotation, and scale as original prefab
+			{
+				//keep same world position, rotation, and scale as original prefab
 				Transform prefabTransform = (prefab as GameObject).transform;
 				Transform instanceTransform = (instance as GameObject).transform;
 				instanceTransform.SetWorldScale(prefabTransform.lossyScale);
 				instanceTransform.SetPositionAndRotation(prefabTransform.position, prefabTransform.rotation);
 			}
+
 			return instance;
 		}
 
 		public enum SearchModes { Parent, Parents, Self, Child, Children, Custom }
 
-		public static T[] GetComponentsInHierarchy<T>(this GameObject gameObject, SearchModes mode, List<GameObject> customObjects = null)
+		public static T GetComponentInHierarchy<T>(this GameObject gameObject, SearchModes mode) where T : class
+		{
+			T t;
+
+			switch(mode)
+			{
+				case SearchModes.Parent:
+				case SearchModes.Parents:
+					t = gameObject.GetComponentInParent<T>();
+					break;
+
+				case SearchModes.Self:
+					t = gameObject.GetComponent<T>();
+					break;
+
+				case SearchModes.Child:
+				case SearchModes.Children:
+					t = gameObject.GetComponentInChildren<T>();
+					break;
+
+				default:
+					t = null;
+					break;
+			}
+
+			return t;
+		}
+
+		public static T[] GetComponentsInHierarchy<T>(this GameObject gameObject, SearchModes mode, List<GameObject> customObjects = null) where T : class
 		{
 			T[] components;
 

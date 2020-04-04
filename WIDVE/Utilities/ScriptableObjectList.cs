@@ -120,6 +120,11 @@ namespace WIDVE.Utilities
 			Objects.RemoveAt(index);
 		}
 
+		public void Clear()
+		{
+			Objects.Clear();
+		}
+
 		public IEnumerator GetEnumerator()
 		{
 			return Objects.GetEnumerator();

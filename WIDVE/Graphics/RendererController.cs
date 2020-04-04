@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditorInternal;
 #endif
+using WIDVE.Utilities;
 
 namespace WIDVE.Graphics
 {
@@ -14,11 +16,15 @@ namespace WIDVE.Graphics
 		ShaderProperties _shaderProperties;
 		protected ShaderProperties ShaderProperties => _shaderProperties;
 
-		protected enum RendererModes { Parent, Self, Children }
 		[SerializeField]
 		[Tooltip("Specifies which Renderers are affected by this object.")]
-		RendererModes _rendererMode = RendererModes.Parent;
-		protected RendererModes RendererMode => _rendererMode;
+		GameObjectExtensions.SearchModes _mode;
+		GameObjectExtensions.SearchModes Mode => _mode;
+
+		[SerializeField]
+		[HideInInspector]
+		List<GameObject> _objects;
+		List<GameObject> Objects => _objects ?? (_objects = new List<GameObject>());
 
 		[SerializeField]
 		[HideInInspector]
@@ -52,36 +58,9 @@ namespace WIDVE.Graphics
 
 		public virtual bool FunctionWhenDisabled => false;
 
-		Renderer[] GetRenderers()
+		protected Renderer[] GetRenderers()
 		{
-			Renderer[] renderers = new Renderer[0];
-			Renderer r;
-			switch(RendererMode)
-			{
-				case RendererModes.Parent:
-					r = GetComponentInParent<Renderer>();
-					if(r != null)
-					{
-						renderers = new Renderer[1];
-						renderers[0] = r;
-					}
-					break;
-
-				default:
-				case RendererModes.Self:
-					r = GetComponent<Renderer>();
-					if(r != null)
-					{
-						renderers = new Renderer[1];
-						renderers[0] = r;
-					}
-					break;
-
-				case RendererModes.Children:
-					renderers = GetComponentsInChildren<Renderer>(true);
-					break;
-			}
-			return renderers;
+			return gameObject.GetComponentsInHierarchy<Renderer>(Mode, Objects);
 		}
 
 		public abstract void SetValue(float value);
@@ -91,11 +70,43 @@ namespace WIDVE.Graphics
 		[CustomEditor(typeof(RendererController), true)]
 		protected class Editor : UnityEditor.Editor
 		{
+			ReorderableList Objects;
+
+			protected virtual void OnEnable()
+			{
+				Objects = new ReorderableList(serializedObject, serializedObject.FindProperty(nameof(_objects)),
+											true, true, true, true);
+
+				Objects.drawHeaderCallback = rect =>
+				{
+					EditorGUI.LabelField(rect, "Objects");
+				};
+
+				Objects.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) =>
+				{
+					SerializedProperty element = Objects.serializedProperty.GetArrayElementAtIndex(index);
+					EditorGUI.PropertyField(position: new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight),
+											property: element,
+											label: new GUIContent(index.ToString()));
+				};
+			}
+
 			public override void OnInspectorGUI()
 			{
 				EditorGUI.BeginChangeCheck();
 
-				base.OnInspectorGUI();
+				serializedObject.Update();
+
+				DrawDefaultInspector();
+
+				SerializedProperty mode = serializedObject.FindProperty(nameof(_mode));
+
+				if(mode.enumValueIndex == (int)GameObjectExtensions.SearchModes.Custom)
+				{
+					Objects.DoLayoutList();
+				}
+
+				serializedObject.ApplyModifiedProperties();
 
 				bool somethingChanged = EditorGUI.EndChangeCheck();
 

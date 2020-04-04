@@ -13,19 +13,26 @@ namespace WIDVE.Utilities
 		BoxCollider _collider;
 		BoxCollider Collider => _collider;
 
+		[SerializeField]
+		Vector3 _padding = Vector3.zero;
+		Vector3 Padding => _padding;
+
 		public void MatchColliderToBounds()
 		{
-			Renderer boundsObject = GetComponentInParent<Renderer>();
-			if(!boundsObject)
+			Renderer boundsRenderer = GetComponentInParent<Renderer>();
+
+			if(!boundsRenderer)
 			{
 				Debug.Log("Error! No object found to use as bounds.");
 				return;
 			}
 
-			Bounds bounds = boundsObject.bounds;
+			Bounds bounds = boundsRenderer.bounds;
 
-			Collider.center = bounds.center;
-			Collider.size = bounds.extents * 2;
+			Collider.center = transform.InverseTransformPoint(bounds.center);
+			Collider.size = (bounds.extents + Padding) * 2;
+
+			gameObject.MarkSceneDirty();
 		}
 
 #if UNITY_EDITOR
@@ -35,13 +42,16 @@ namespace WIDVE.Utilities
 		{
 			public override void OnInspectorGUI()
 			{
+				EditorGUI.BeginChangeCheck();
+
 				base.OnInspectorGUI();
 
-				if(GUILayout.Button("Match Bounds"))
+				bool changed = EditorGUI.EndChangeCheck();
+
+				if(GUILayout.Button("Match Bounds") || changed)
 				{
-					foreach(Object t in targets)
+					foreach(BoxColliderBounds bcb in targets)
 					{
-						BoxColliderBounds bcb = t as BoxColliderBounds;
 						bcb.MatchColliderToBounds();
 					}
 				}
