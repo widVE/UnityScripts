@@ -52,7 +52,7 @@ namespace WIDVE.Utilities
 				IHighlightable highlightable = CurrentHighlights[i];
 
 				//remove any highlightables that have been destroyed
-				if(highlightable == null)
+				if(highlightable == null || highlightable.Equals(null))
 				{
 					CurrentHighlights.RemoveAt(i);
 					continue;
@@ -62,6 +62,7 @@ namespace WIDVE.Utilities
 				if(!highlightables.Contains(highlightable))
 				{
 					highlightable.EndHighlight();
+					CurrentHighlights.RemoveAt(i);
 				}
 			}
 

@@ -18,7 +18,7 @@ namespace WIDVE.Graphics
 
 		[SerializeField]
 		[Tooltip("Specifies which Renderers are affected by this object.")]
-		GameObjectExtensions.SearchModes _mode;
+		GameObjectExtensions.SearchModes _mode = GameObjectExtensions.SearchModes.Self;
 		GameObjectExtensions.SearchModes Mode => _mode;
 
 		[SerializeField]
