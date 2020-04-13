@@ -19,14 +19,14 @@ namespace WIDVE.Utilities
                                       Prefab is Component c ? c.gameObject.tag :
                                       string.Empty;
 
-        public Object Spawn()
+        public virtual Object Spawn()
         {
             if(!Prefab) return null;
 
             return Spawn(transform, Prefab);
         }
 
-        public Object[] SpawnMany(int amount)
+        public virtual Object[] SpawnMany(int amount)
         {
             if(!Prefab) return null;
 
@@ -71,44 +71,50 @@ namespace WIDVE.Utilities
 
                 PrefabSpawner prefabSpawner = target as PrefabSpawner;
 
-                if(GUILayout.Button($"Spawn {prefabSpawner.PrefabName}"))
+                if(GUILayout.Button($"Create {prefabSpawner.PrefabName}"))
                 {
                     foreach(PrefabSpawner ps in targets)
                     {
-                        Create(ps);
+                        Object spawned = Create(ps);
+                        Selection.objects = new Object[] { spawned };
                     }
                 }
             }
 
-            static void Create(PrefabSpawner prefabSpawner)
+            static Object Create(PrefabSpawner prefabSpawner)
             {
                 if(!prefabSpawner.Prefab)
                 {
                     Debug.Log($"[{prefabSpawner.name}] Error! Need a Prefab object.");
-                    return;
+                    return null;
                 }
 
                 Object spawned = prefabSpawner.Spawn();
 
                 if(spawned) Undo.RegisterCreatedObjectUndo(spawned, $"Spawned {prefabSpawner.PrefabName}");
+
+                return spawned;
             }
 
-            static void CreateMany(PrefabSpawner prefabSpawner, int amount)
+            static Object[] CreateMany(PrefabSpawner prefabSpawner, int amount)
             {
                 if(!prefabSpawner.Prefab)
                 {
                     Debug.Log($"[{prefabSpawner.name}] Error! Need a Prefab object.");
-                    return;
+                    return null;
                 }
 
                 Undo.SetCurrentGroupName($"Spawned {amount} {prefabSpawner.PrefabName}s");
 
+                Object[] spawned = new Object[amount];
                 for(int i = 0; i < amount; i++)
                 {
-                    Create(prefabSpawner);
+                    spawned[i] = Create(prefabSpawner);
                 }
 
                 Undo.CollapseUndoOperations(Undo.GetCurrentGroup());
+
+                return spawned;
             }
         }
 #endif

@@ -44,9 +44,13 @@ namespace WIDVE.Paths
 			}
 
 			//assign points to the tube
-			tube.points = tubePoints;
-			tube.ForceUpdate();
-			tube.SetDirty();
+			try
+			{
+				tube.points = tubePoints;
+				tube.ForceUpdate();
+				tube.SetDirty();
+			}
+			catch(UnassignedReferenceException) { }
 		}
 
 		public void OnNotify()

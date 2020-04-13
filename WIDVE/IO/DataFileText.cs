@@ -7,7 +7,7 @@ namespace WIDVE.IO
 {
 	public abstract class DataFileText : DataFile
 	{
-		public sealed override FileFormats FileFormat=> FileFormats.Text;
+		public sealed override FileFormats FileFormat => FileFormats.Text;
 
 		/// <summary>
 		/// Returns a StreamWriter with the file's specified write mode.

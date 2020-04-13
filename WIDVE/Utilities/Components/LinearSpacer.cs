@@ -24,11 +24,13 @@ namespace WIDVE.Utilities
 			set => _end = value;
 		}
 
+		Vector3 StartPoint => transform.TransformPoint(transform.localPosition + Start);
+
+		Vector3 EndPoint => transform.TransformPoint(transform.localPosition + End);
+
 		public override Vector3 GetPosition(int index)
 		{
-			Vector3 start = transform.position + transform.TransformPoint(Start);
-			Vector3 end = transform.position + transform.TransformPoint(End);
-			return GetPosition(index, Objects.Count, start, end);
+			return GetPosition(index, Objects.Count, StartPoint, EndPoint);
 		}
 
 		/// <summary>
@@ -51,9 +53,7 @@ namespace WIDVE.Utilities
 
 			Gizmos.color = Color.grey;
 
-			Vector3 start = transform.position + transform.TransformPoint(Start);
-			Vector3 end = transform.position + transform.TransformPoint(End);
-			Gizmos.DrawLine(start, end);
+			Gizmos.DrawLine(StartPoint, EndPoint);
 
 			base.DrawGizmos();
 		}

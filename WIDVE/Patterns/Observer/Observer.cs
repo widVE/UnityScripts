@@ -112,6 +112,11 @@ namespace WIDVE.Patterns
 					observer.Subscribe(newObject);
 					observer.Notify();
 				}
+
+				if(GUILayout.Button("Notify"))
+				{
+					observer.Notify();
+				}
 			}
 		}
 #endif

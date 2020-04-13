@@ -15,8 +15,8 @@ namespace WIDVE.Paths
 		PathCreator _path;
 		public PathCreator Path
 		{
-		get => _path;
-		set => _path = value;
+			get => _path;
+			set => _path = value;
 		}
 
 		[SerializeField]

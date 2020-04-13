@@ -63,6 +63,30 @@ namespace WIDVE.IO
 			}
 		}
 
+		static string _streamingAssetsPath = string.Empty;
+		/// <summary>
+		/// Stores Application.streamingAssetsPath so it can be accessed from threads.
+		/// </summary>
+		public static string StreamingAssetsPath
+		{
+			get
+			{
+				if(string.IsNullOrEmpty(_streamingAssetsPath))
+				{
+					try
+					{
+						_streamingAssetsPath = Application.streamingAssetsPath;
+					}
+					catch(System.ArgumentException)
+					{
+						_streamingAssetsPath = string.Empty;
+					}
+				}
+
+				return _streamingAssetsPath;
+			}
+		}
+
 		static string _fallbackFolderPath = string.Empty;
 		/// <summary>
 		/// This is where DataFiles will be written to if their specified path does not exist.
@@ -79,7 +103,7 @@ namespace WIDVE.IO
 			}
 		}
 
-		public enum FolderTypes { Absolute, RelativeToApplicationDataPath, RelativeToPersistentDataPath }
+		public enum FolderTypes { Absolute, RelativeToApplicationDataPath, RelativeToPersistentDataPath, RelativeToStreamingAssetsPath }
 
 		[SerializeField]
 		[HideInInspector]
@@ -203,6 +227,36 @@ namespace WIDVE.IO
 				return _path;
 			}
 		}
+
+		/// <summary>
+		/// Returns the path relative to the root folder specified by FolderType.
+		/// </summary>
+		public string RelativePath
+		{
+			get
+			{
+				int i;
+				switch(FolderType)
+				{
+					default:
+					case FolderTypes.Absolute:
+						return Path;
+
+					case FolderTypes.RelativeToApplicationDataPath:
+						i = Path.IndexOf(ApplicationDataPath);
+						return Path.Remove(i, ApplicationDataPath.Length);
+
+					case FolderTypes.RelativeToPersistentDataPath:
+						i = Path.IndexOf(PersistentDataPath);
+						return Path.Remove(i, PersistentDataPath.Length);
+
+					case FolderTypes.RelativeToStreamingAssetsPath:
+						i = Path.IndexOf(StreamingAssetsPath);
+						return "Assets/StreamingAssets" + Path.Remove(i, StreamingAssetsPath.Length);
+				}
+			}
+		}
+
 		/// <summary>
 		/// Returns true if the file exists on disk.
 		/// </summary>
@@ -241,12 +295,13 @@ namespace WIDVE.IO
 
 		/// <summary>
 		/// Call this before any DataFiles are used outside of the main thread.
-		/// <para>Need to do this since Application.dataPath and Application.persistentDataPath can't be accessed directly in a separate thread.</para>
+		/// <para>Need to do this since Application data paths can't be accessed directly in a separate thread.</para>
 		/// </summary>
 		public static void StoreApplicationDataPaths()
 		{
 			_applicationDataPath = ApplicationDataPath;
 			_persistentDataPath = PersistentDataPath;
+			_streamingAssetsPath = StreamingAssetsPath;
 		}
 
 		/// <summary>
@@ -268,6 +323,9 @@ namespace WIDVE.IO
 
 				case FolderTypes.RelativeToPersistentDataPath:
 					return System.IO.Path.Combine(PersistentDataPath, folder);
+
+				case FolderTypes.RelativeToStreamingAssetsPath:
+					return System.IO.Path.Combine(StreamingAssetsPath, folder);
 			}
 		}
 
@@ -334,7 +392,8 @@ namespace WIDVE.IO
 				DrawDefaultInspector();
 
 				//these fields are hidden by default so they don't get draw twice
-				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_folderType)));
+				SerializedProperty folderType = serializedObject.FindProperty(nameof(_folderType));
+				EditorGUILayout.PropertyField(folderType);
 
 				//don't draw create folder if file is read only...
 				if(writeMode.enumValueIndex != (int)WriteModes.ReadOnly)
@@ -349,6 +408,40 @@ namespace WIDVE.IO
 				dataFile.DrawExtension(serializedObject);
 
 				EditorGUILayout.PropertyField(writeMode);
+
+				/*
+				//show the asset if it is part of the project
+				bool fileFound = false;
+				if(folderType.enumValueIndex == (int)FolderTypes.RelativeToApplicationDataPath ||
+				   folderType.enumValueIndex == (int)FolderTypes.RelativeToStreamingAssetsPath)
+				{
+					GUI.enabled = false;
+
+					TextAsset file = AssetDatabase.LoadAssetAtPath<TextAsset>(System.IO.Path.GetFileNameWithoutExtension(dataFile.RelativePath));
+					if(file)
+					{
+						EditorGUILayout.ObjectField(file, typeof(TextAsset), allowSceneObjects: false);
+						fileFound = true;
+					}
+					else
+					{
+						EditorGUILayout.LabelField("No file found at specified path!");
+						fileFound = false;
+					}
+
+					GUI.enabled = true;
+				}
+
+				//otherwise, show the full filepath
+				if(!fileFound)
+				{
+					GUI.enabled = false;
+
+					EditorGUILayout.LabelField($"Path: {dataFile.Path}", new GUIStyle() { wordWrap = true });
+
+					GUI.enabled = true;
+				}
+				*/
 
 				bool changed = EditorGUI.EndChangeCheck();
 
