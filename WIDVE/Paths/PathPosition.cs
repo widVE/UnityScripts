@@ -3,29 +3,23 @@ using System.Collections.Generic;
 using UnityEngine;
 using PathCreation;
 using WIDVE.Patterns;
+using WIDVE.Utilities;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
 namespace WIDVE.Paths
 {
-	public class PathPosition : MonoBehaviour, IObserver<PathCreator>
+	[ExecuteAlways]
+	public class PathPosition : PathObject, IInterpolatable
 	{
-		[SerializeField]
-		PathCreator _path;
-		public PathCreator Path
-		{
-			get => _path;
-			set => _path = value;
-		}
-
 		[SerializeField]
 		[Range(0, 1)]
 		float _position;
-		public float Position
+		public override float Position
 		{
 			get => _position;
-			private set => _position = value;
+			protected set => _position = value;
 		}
 
 		[SerializeField]
@@ -46,6 +40,10 @@ namespace WIDVE.Paths
 			set => _savedWorldPosition = value;
 		}
 
+		public bool Enabled => enabled;
+
+		public bool FunctionWhenDisabled => false;
+
 		public float Distance => PositionToDistance(Position);
 
 		float MaxDistance => Path ? Path.path.length : 0;
@@ -53,6 +51,8 @@ namespace WIDVE.Paths
 		public Vector3 WorldPosition => Path.path.GetPointAtTime(Position, EndInstruction);
 
 		public Vector3 Direction => Path.path.GetDirection(Position, EndInstruction);
+
+		public System.Action<float> OnPositionChanged;
 
 		EndOfPathInstruction EndInstruction
 		{
@@ -81,7 +81,7 @@ namespace WIDVE.Paths
 			if(EndInstruction == EndOfPathInstruction.Loop) position = (position + 1) % 1;
 			else position = Mathf.Clamp01(position);
 
-			//set position property
+			//set position
 			Position = position;
 
 			//set world position based on path
@@ -109,6 +109,13 @@ namespace WIDVE.Paths
 
 				transform.rotation = Quaternion.Euler(rotationAngles);
 			}
+
+			//update the path object sequence when done
+			PathObjectSequence sequence = PathObjectSequence.FindFromPath(Path);
+			sequence.Sort();
+
+			//notify that position has changed
+			OnPositionChanged?.Invoke(Position);
 		}
 
 		public void SetDistance(float distance, bool saveWorldPosition = false)
@@ -121,20 +128,36 @@ namespace WIDVE.Paths
 			if(!Path) return;
 
 			//set Position to the path position closest to the provided world position
-			Position = Path.path.GetClosestTimeOnPath(position);
-			SetPosition(Position, false);
+			SetPosition(Path.path.GetClosestTimeOnPath(position), false);
 		}
 
-		public void OnNotify()
+		public override void OnNotify()
 		{
 			if(LockWorldPosition) SetWorldPosition(SavedWorldPosition);
 			else SetPosition(Position, true);
 		}
 
+		public void SetValue(float value)
+		{
+			SetPosition(value);
+		}
+
+		void OnEnable()
+		{
+			//add this object to the path's path object sequence
+			AddToSequence(Path);
+		}
+
+		void OnDisable()
+		{
+			//remove this object from the path's path object sequence
+			RemoveFromSequence(Path);
+		}
+
 #if UNITY_EDITOR
 		[CanEditMultipleObjects]
-		[CustomEditor(typeof(PathPosition))]
-		class Editor : UnityEditor.Editor
+		[CustomEditor(typeof(PathPosition), true)]
+		new class Editor : PathObject.Editor
 		{
 			ICommand SHF;
 
@@ -155,17 +178,21 @@ namespace WIDVE.Paths
 				//lock transform
 				PathPosition pathPosition = target as PathPosition;
 				if(pathPosition.Path) SetHideFlags();
+
+				Undo.undoRedoPerformed += UpdatePosition;
 			}
 
 			public override void OnInspectorGUI()
 			{
-				PathPosition pathPosition = target as PathPosition;
-
 				EditorGUI.BeginChangeCheck();
+
+				base.OnInspectorGUI();
 
 				serializedObject.Update();
 
-				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_path)));
+				//draw settings
+				EditorGUI.BeginChangeCheck();
+
 				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_position)));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_lockWorldPosition)));
 
@@ -184,16 +211,25 @@ namespace WIDVE.Paths
 
 				GUILayout.EndHorizontal();
 
+				bool changed = EditorGUI.EndChangeCheck();
+
 				serializedObject.ApplyModifiedProperties();
 
-				if(EditorGUI.EndChangeCheck())
+				if(changed)
 				{
 					//set hide flags if they were not already set
 					if(SHF == null) SetHideFlags();
 
-					//update position on path
-					pathPosition.SetPosition(pathPosition.Position, true);
+					UpdatePosition();
 				}
+			}
+
+			void UpdatePosition()
+			{
+				PathPosition pathPosition = target as PathPosition;
+
+				pathPosition.SetPosition(pathPosition.Position, true);
+				EditorUtility.SetDirty(pathPosition.transform);
 			}
 
 			void OnDisable()
@@ -204,6 +240,8 @@ namespace WIDVE.Paths
 					SHF.Undo();
 					SHF = null;
 				}
+
+				Undo.undoRedoPerformed -= UpdatePosition;
 			}
 		}
 #endif

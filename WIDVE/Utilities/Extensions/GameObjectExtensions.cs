@@ -255,7 +255,10 @@ namespace WIDVE.Utilities
 			}
 #endif
 
-			if (keepPrefabTransform && instance != null)
+			//keep original name (no more appending '(Clone)')
+			instance.name = prefab.name;
+
+			if(keepPrefabTransform && instance != null)
 			{
 				//keep same world position, rotation, and scale as original prefab
 				Transform prefabTransform = (prefab as GameObject).transform;

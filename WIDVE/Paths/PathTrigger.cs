@@ -1,14 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using WIDVE.Graphics;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
+using WIDVE.Utilities;
 
 namespace WIDVE.Paths
 {
-	public class PathTrigger : MonoBehaviour, IInterpolatable
+	public class PathTrigger : MonoBehaviour
 	{
 		[SerializeField]
 		PathPosition _position;
@@ -18,76 +15,55 @@ namespace WIDVE.Paths
 			set => _position = value;
 		}
 
-		[SerializeField]
-		Vector2 _range = new Vector2(0, 1);
-		public Vector2 Range
+		float LastPosition = 0;
+
+		public event System.Action<PathObject> OnTrigger;
+
+		public void UpdatePosition(float position)
 		{
-			get => _range;
-			set => _range = value;
-		}
+			//activate all objects between the last position and the new position:
+			PathObjectSequence sequence = Position.Sequence;
 
-		[SerializeField]
-		PathEventSequence _events;
-		public PathEventSequence Events
-		{
-			get => _events;
-			set => _events = value;
-		}
+			//start at the first object located after the last frame's position
+			int startIndex = sequence.GetPrevIndex(LastPosition) + 1;
 
-		float Min => Range[0];
+			//end just before the first object located after the current frame's position
+			int endIndex = sequence.GetNextIndex(Position.Position);
 
-		float Max => Range[1];
-
-		float LastPosition = -1;
-
-		int LastEvent = 0;
-
-		public bool Enabled => enabled;
-
-		public bool FunctionWhenDisabled => false;
-
-		public void SetPosition(float position)
-		{
-			//clamp position to the range and check that the trigger will actually move
-			position = Mathf.Clamp(position, Min, Max);
-			if(Mathf.Approximately(position, Position.Position)) return;
-
-			//move to the new position
-			Position.SetPosition(position);
-
-			//activate all events between the last position and the new position
-			for(int i = LastEvent; i < Events.Count; i++)
+			//don't trigger anything when disabled
+			if(enabled)
 			{
-				//events should already be sorted by position
-				PathEvent pathEvent = Events[i];
+				for(int i = startIndex; i < endIndex; i++)
+				{
+					PathObject pathObject = sequence[i];
 
-				//skip or stop if outside range
-				if(pathEvent.Position < Min) continue;
-				if(pathEvent.Position > Max) break;
+					//don't let the trigger trigger itself
+					if(pathObject == Position) continue;
 
-				//stop if exceeding the current position
-				if(pathEvent.Position > position) break;
+					//notify that an object has been triggered
+					OnTrigger?.Invoke(pathObject);
 
-				//trigger the event
-				pathEvent.Trigger();
-				LastEvent = i;
+					//if the object has a PathEvent, trigger it now
+					PathEvent pathEvent = pathObject.GetComponentInChildren<PathEvent>();
+					if(pathEvent) pathEvent.Trigger();
+				}
 			}
 
-			//store last position
-			LastPosition = position;
-		}
-
-		public void SetValue(float value)
-		{
-			SetPosition(value);
+			//remember the current position for the next frame
+			LastPosition = Position.Position;
 		}
 
 		public void Reset()
 		{
-			//return to the starting point of the range
-			if(Position) Position.SetPosition(Min);
-			LastPosition = Min;
-			LastEvent = 0;
+			//return to the starting point without triggering anything
+			enabled = false;
+			if(Position) Position.SetPosition(0);
+			enabled = true;
+		}
+		
+		void OnEnable()
+		{
+			Position.OnPositionChanged += UpdatePosition;
 		}
 
 		void Start()
@@ -95,32 +71,9 @@ namespace WIDVE.Paths
 			Reset();
 		}
 
-#if UNITY_EDITOR
-		[CanEditMultipleObjects]
-		[CustomEditor(typeof(PathTrigger))]
-		class Editor: UnityEditor.Editor
+		void OnDisable()
 		{
-			public override void OnInspectorGUI()
-			{
-				EditorGUI.BeginChangeCheck();
-
-				base.OnInspectorGUI();
-
-				if(EditorGUI.EndChangeCheck())
-				{
-					foreach(PathTrigger pt in targets)
-					{
-						//validate range and reset
-						if(pt.Min < 0) pt._range[0] = 0;
-						if(pt.Min > 1) pt._range[0] = 1;
-						if(pt.Max < 0) pt._range[1] = 0;
-						if(pt.Max > 1) pt._range[1] = 1;
-
-						pt.Reset();
-					}
-				}
-			}
+			Position.OnPositionChanged -= UpdatePosition;
 		}
-#endif
 	}
 }
