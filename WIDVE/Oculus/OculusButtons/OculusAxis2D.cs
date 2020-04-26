@@ -5,7 +5,7 @@ using WIDVE.Utilities;
 
 namespace WIDVE.Oculus
 {
-	[CreateAssetMenu(fileName =nameof(OculusAxis2D), menuName =MENU_NAME + "/" + nameof(OculusAxis2D), order =MENU_ORDER)]
+	[CreateAssetMenu(fileName =nameof(OculusAxis2D), menuName = nameof(Button) + "/" + nameof(OculusAxis2D), order =B_ORDER)]
 	public class OculusAxis2D : ButtonVector2
 	{
 		[SerializeField]

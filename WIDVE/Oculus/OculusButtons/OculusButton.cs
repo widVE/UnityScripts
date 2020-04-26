@@ -5,7 +5,7 @@ using WIDVE.Utilities;
 
 namespace WIDVE.Oculus
 {
-	[CreateAssetMenu(fileName = nameof(OculusButton), menuName = MENU_NAME + "/" + nameof(OculusButton), order = MENU_ORDER)]
+	[CreateAssetMenu(fileName = nameof(OculusButton), menuName = nameof(Button) + "/" + nameof(OculusButton), order = B_ORDER)]
 	public class OculusButton : ButtonFloat
 	{
 		[SerializeField]

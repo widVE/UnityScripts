@@ -25,7 +25,7 @@ namespace WIDVE.Paths
 		[SerializeField]
 		[HideInInspector]
 		bool[] _rotate = { false, false, false };
-		bool[] Rotate => _rotate;
+		public bool[] Rotate => _rotate;
 
 		[SerializeField]
 		bool _lockWorldPosition = false;
@@ -48,9 +48,11 @@ namespace WIDVE.Paths
 
 		float MaxDistance => Path ? Path.path.length : 0;
 
-		public Vector3 WorldPosition => Path.path.GetPointAtTime(Position, EndInstruction);
+		public Vector3 WorldPosition => Path ? Path.path.GetPointAtTime(Position, EndInstruction) : Vector3.zero;
 
-		public Vector3 Direction => Path.path.GetDirection(Position, EndInstruction);
+		public Vector3 Direction => Path ? Path.path.GetDirection(Position, EndInstruction) : Vector3.forward;
+
+		public Quaternion Rotation => Path ? Path.path.GetRotation(Position, EndInstruction) : Quaternion.identity;
 
 		public System.Action<float> OnPositionChanged;
 
@@ -95,20 +97,7 @@ namespace WIDVE.Paths
 			}
 
 			//optional: set rotation based on path tangent at position
-			if(Rotate[0] | Rotate[1] | Rotate[2])
-			{
-				Quaternion rotation = Path.path.GetRotation(position, EndInstruction);
-
-				//lock any axes that shouldn't rotate
-				Vector3 rotationAngles = rotation.eulerAngles;
-				Vector3 i_rotationAngles = transform.rotation.eulerAngles;
-				for(int i = 0; i < 3; i++)
-				{
-					if(!Rotate[i]) rotationAngles[i] = i_rotationAngles[i];
-				}
-
-				transform.rotation = Quaternion.Euler(rotationAngles);
-			}
+			SetRotation(Position, Rotate);
 
 			//update the path object sequence when done
 			PathObjectSequence sequence = PathObjectSequence.FindFromPath(Path);
@@ -116,6 +105,31 @@ namespace WIDVE.Paths
 
 			//notify that position has changed
 			OnPositionChanged?.Invoke(Position);
+		}
+
+		public void SetRotation(float position, bool[] rotationAxes = null)
+		{
+			if(!Path) return;
+
+			//if all axes are locked, rotation will be reset to the default
+			transform.localRotation = Quaternion.identity;
+
+			//rotate on certain axes:
+			if(rotationAxes == null) rotationAxes = new bool[] { false, false, false };
+			if(rotationAxes[0] | rotationAxes[1] | rotationAxes[2])
+			{
+				Quaternion rotation = Path.path.GetRotation(position, EndInstruction);
+
+				//lock any axes that shouldn't rotate
+				Vector3 rotationAngles = rotation.eulerAngles;
+				Vector3 i_rotationAngles = transform.localRotation.eulerAngles;
+				for(int i = 0; i < 3; i++)
+				{
+					if(!rotationAxes[i]) rotationAngles[i] = i_rotationAngles[i];
+				}
+
+				transform.rotation = Quaternion.Euler(rotationAngles);
+			}
 		}
 
 		public void SetDistance(float distance, bool saveWorldPosition = false)
@@ -155,6 +169,22 @@ namespace WIDVE.Paths
 		}
 
 #if UNITY_EDITOR
+		public static void DrawRotationSettings(SerializedProperty rotationSettings)
+		{
+			GUILayout.BeginHorizontal();
+
+			GUILayout.Label("Rotate:");
+
+			string[] buttonNames = { "X", "Y", "Z" };
+			for(int i = 0; i < rotationSettings.arraySize; i++)
+			{
+				SerializedProperty boolProperty = rotationSettings.GetArrayElementAtIndex(i);
+				boolProperty.boolValue = GUILayout.Toggle(boolProperty.boolValue, buttonNames[i]);
+			}
+
+			GUILayout.EndHorizontal();
+		}
+
 		[CanEditMultipleObjects]
 		[CustomEditor(typeof(PathPosition), true)]
 		new class Editor : PathObject.Editor
@@ -191,25 +221,11 @@ namespace WIDVE.Paths
 				serializedObject.Update();
 
 				//draw settings
-				EditorGUI.BeginChangeCheck();
-
 				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_position)));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_lockWorldPosition)));
 
 				//draw rotation settings
-				GUILayout.BeginHorizontal();
-				
-				SerializedProperty rotateProperty = serializedObject.FindProperty(nameof(_rotate));
-				GUILayout.Label("Rotate:");
-
-				string[] buttonNames = { "X", "Y", "Z" };
-				for(int i = 0; i < rotateProperty.arraySize; i++)
-				{
-					SerializedProperty boolProperty = rotateProperty.GetArrayElementAtIndex(i);
-					boolProperty.boolValue = GUILayout.Toggle(boolProperty.boolValue, buttonNames[i]);
-				}
-
-				GUILayout.EndHorizontal();
+				DrawRotationSettings(serializedObject.FindProperty(nameof(_rotate)));
 
 				bool changed = EditorGUI.EndChangeCheck();
 

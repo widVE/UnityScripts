@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using WIDVE.Utilities;
 
@@ -15,45 +16,72 @@ namespace WIDVE.Paths
 			set => _position = value;
 		}
 
+		[SerializeField]
+		[Tooltip("Only events on these layers will be triggered.")]
+		LayerMask _layers = ~0;
+		public LayerMask Layers
+		{
+			get => _layers;
+			set => _layers = value;
+		}
+
 		float LastPosition = 0;
 
 		public event System.Action<PathObject> OnTrigger;
 
+		void ProcessPathObject(PathObject pathObject)
+		{
+			//skip objects on the wrong layers
+			if(!Layers.Contains(pathObject.gameObject.layer)) return;
+
+			//don't let the trigger trigger itself
+			if(pathObject == Position) return;
+
+			//if the object has a PathEvent, trigger it now
+			IPathEvent pathEvent = pathObject.GetComponent<IPathEvent>();
+			if(pathEvent != null)
+			{
+				pathEvent.Trigger(this);
+			}
+
+			//afterwards, notify that an object has been triggered
+			OnTrigger?.Invoke(pathObject);
+		}
+
 		public void UpdatePosition(float position)
 		{
-			//activate all objects between the last position and the new position:
+			if(!enabled) return;
+			if(!Application.IsPlaying(this)) return;
+
+			//don't update if position hasn't changed
+			if(Mathf.Approximately(position, LastPosition)) return;
+
+			//activate all objects between the last position and the new position
 			PathObjectSequence sequence = Position.Sequence;
+			List<PathObject> objects = sequence.GetObjects(LastPosition, position);
 
-			//start at the first object located after the last frame's position
-			int startIndex = sequence.GetPrevIndex(LastPosition) + 1;
-
-			//end just before the first object located after the current frame's position
-			int endIndex = sequence.GetNextIndex(Position.Position);
-
-			//don't trigger anything when disabled
-			if(enabled)
+			if(LastPosition < position)
 			{
-				for(int i = startIndex; i < endIndex; i++)
+				//moving forwards
+				for(int i = 0; i < objects.Count; i++)
 				{
-					PathObject pathObject = sequence[i];
-
-					//don't let the trigger trigger itself
-					if(pathObject == Position) continue;
-
-					//notify that an object has been triggered
-					OnTrigger?.Invoke(pathObject);
-
-					//if the object has a PathEvent, trigger it now
-					PathEvent pathEvent = pathObject.GetComponentInChildren<PathEvent>();
-					if(pathEvent) pathEvent.Trigger();
+					ProcessPathObject(objects[i]);
+				}
+			}
+			else
+			{
+				//moving backwards
+				for(int i = objects.Count - 1; i >= 0; i--)
+				{
+					ProcessPathObject(objects[i]);
 				}
 			}
 
 			//remember the current position for the next frame
-			LastPosition = Position.Position;
+			LastPosition = position;
 		}
 
-		public void Reset()
+		public void ReturnToStart()
 		{
 			//return to the starting point without triggering anything
 			enabled = false;
@@ -68,7 +96,8 @@ namespace WIDVE.Paths
 
 		void Start()
 		{
-			Reset();
+			//set the starting position
+			LastPosition = Position.Position;
 		}
 
 		void OnDisable()

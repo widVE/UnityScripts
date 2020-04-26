@@ -19,13 +19,10 @@ namespace WIDVE.Graphics
 
 		Material CurrentMaterial = null;
 
-		void SetMaterial(Material m)
+		protected override void SetMaterial(Material m)
 		{
-			for(int i = 0; i < Renderers.Length; i++)
-			{
-				Renderers[i].sharedMaterial = m;
-				ShaderProperties.SetRenderModes(m, Renderers[i].sharedMaterial);
-			}
+			base.SetMaterial(m);
+
 			CurrentMaterial = m;
 		}
 

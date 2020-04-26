@@ -9,7 +9,7 @@ using WIDVE.Utilities;
 
 namespace WIDVE.Graphics
 {
-	public abstract class RendererController : MonoBehaviour, IInterpolatable
+	public abstract class RendererController : MonoBehaviour, IInterpolatable //make this inherit from the generic Controller class now...
 	{
 		[SerializeField]
 		[Tooltip("ShaderProperties used by all Renderers controlled by this behaviour.")]
@@ -61,6 +61,15 @@ namespace WIDVE.Graphics
 		protected Renderer[] GetRenderers()
 		{
 			return gameObject.GetComponentsInHierarchy<Renderer>(Mode, Objects);
+		}
+
+		protected virtual void SetMaterial(Material m)
+		{
+			for(int i = 0; i < Renderers.Length; i++)
+			{
+				Renderers[i].sharedMaterial = m;
+				ShaderProperties.SetRenderModes(m, Renderers[i].sharedMaterial);
+			}
 		}
 
 		public abstract void SetValue(float value);

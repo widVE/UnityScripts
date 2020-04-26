@@ -114,6 +114,42 @@ namespace WIDVE.Paths
 		}
 
 		/// <summary>
+		/// Returns all PathObjects between startPosition (inclusive) and endPosition (exclusive).
+		/// <para>Objects are ordered from least to greatest position on the path.</para>
+		/// </summary>
+		public List<PathObject> GetObjects(float startPosition, float endPosition)
+		{
+			List<PathObject> objects = new List<PathObject>();
+
+			//the 'inclusive' position will always be the start position parameter
+			float inclusivePosition = startPosition;
+
+			//start should be before end - swap them otherwise
+			if(startPosition > endPosition)
+			{
+				float _sp = startPosition;
+				startPosition = endPosition;
+				endPosition = _sp;
+			}
+
+			//get all objects between the two positions
+			for(int i = 0; i < Objects.Count; i++)
+			{
+				PathObject pathObject = Objects[i];
+
+				float position = pathObject.Position;
+
+				if((position > startPosition && position < endPosition) ||
+					Mathf.Approximately(position, inclusivePosition))
+				{
+					objects.Add(pathObject);
+				}
+			}
+
+			return objects;
+		}
+
+		/// <summary>
 		/// Returns the PathObjectSequence associated with the given PathCreator.
 		/// <para>Creates a new PathObjectSequence if one does not exist.</para>
 		/// </summary>

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace WIDVE.Utilities
 {
-	[CreateAssetMenu(fileName = nameof(MKBButton), menuName = MENU_NAME + "/" + nameof(MKBButton), order = MENU_ORDER)]
+	[CreateAssetMenu(fileName = nameof(MKBButton), menuName = nameof(Button) + "/" + nameof(MKBButton), order = B_ORDER)]
 	public class MKBButton : ButtonFloat
 	{
 		[SerializeField]

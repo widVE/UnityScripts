@@ -8,7 +8,7 @@ using UnityEditor;
 
 namespace WIDVE.Paths
 {
-	public class PathEvent : MonoBehaviour
+	public class PathEvent : MonoBehaviour, IPathEvent
 	{
 		[SerializeField]
 		PathPosition _pathPosition;
@@ -20,7 +20,7 @@ namespace WIDVE.Paths
 
 		public float Position => PathPosition ? PathPosition.Position : 0f;
 
-		public void Trigger()
+		public void Trigger(PathTrigger trigger)
 		{
 			OnTrigger?.Invoke();
 		}
@@ -40,7 +40,7 @@ namespace WIDVE.Paths
 					{
 						foreach(PathEvent pe in targets)
 						{
-							pe.Trigger();
+							pe.Trigger(null);
 						}
 					}
 				}

@@ -7,9 +7,7 @@ namespace WIDVE.Utilities
 	//[CreateAssetMenu(fileName = nameof(Button), menuName = MENU_NAME + "/" + nameof(Button), order = MENU_ORDER)]
 	public abstract class Button : ScriptableObject
 	{
-		protected const string MENU_NAME = "Button";
-
-		protected const int MENU_ORDER = 2000;
+		protected const int B_ORDER = 2000;
 
 		[SerializeField]
 		AnimationCurve _smoothing = AnimationCurve.EaseInOut(0, 0, 1, 1);

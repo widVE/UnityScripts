@@ -1,15 +1,50 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace WIDVE.Graphics
 {
 	[ExecuteAlways]
 	public class Fader : RendererController
-	{	
+	{
+		enum Modes { SingleMaterial, SeparateMaterials }
+
+		[SerializeField]
+		[HideInInspector]
+		Modes _fadeMode = Modes.SingleMaterial;
+		Modes FadeMode => _fadeMode;
+
+		[SerializeField]
+		[HideInInspector]
+		Material _opaqueMaterial;
+		Material OpaqueMaterial => _opaqueMaterial;
+
+		[SerializeField]
+		[HideInInspector]
+		Material _transparentMaterial;
+		Material TransparentMaterial => _transparentMaterial;
+
+		Material CurrentMaterial;
+
 		public void SetAlpha(float alpha, bool trackValue=true)
 		{
 			if(!ShaderProperties) return;
+
+			if(FadeMode == Modes.SeparateMaterials)
+			{
+				if(!OpaqueMaterial || !TransparentMaterial) return;
+
+				//set opaque or transparent material
+				Material m = Mathf.Approximately(alpha, 1) ? OpaqueMaterial : TransparentMaterial;
+				if(CurrentMaterial != m)
+				{
+					SetMaterial(m);
+					CurrentMaterial = m;
+				}
+			}
 
 			for(int i = 0; i < Renderers.Length; i++)
 			{
@@ -52,5 +87,30 @@ namespace WIDVE.Graphics
 			//remove any fading
 			SetAlpha(1, false);
 		}
+
+#if UNITY_EDITOR
+		[CanEditMultipleObjects]
+		[CustomEditor(typeof(Fader), true)]
+		new class Editor : RendererController.Editor
+		{
+			public override void OnInspectorGUI()
+			{
+				base.OnInspectorGUI();
+
+				serializedObject.Update();
+
+				SerializedProperty fadeMode = serializedObject.FindProperty(nameof(_fadeMode));
+				EditorGUILayout.PropertyField(fadeMode);
+
+				if(fadeMode.enumValueIndex == (int)Modes.SeparateMaterials)
+				{
+					EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_opaqueMaterial)));
+					EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_transparentMaterial)));
+				}
+
+				serializedObject.ApplyModifiedProperties();
+			}
+		}
+#endif
 	}
 }
