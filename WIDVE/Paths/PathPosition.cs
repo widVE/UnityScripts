@@ -40,6 +40,10 @@ namespace WIDVE.Paths
 			set => _savedWorldPosition = value;
 		}
 
+		[SerializeField]
+		bool _rotateOnStart;
+		bool RotateOnStart => _rotateOnStart;
+
 		public bool Enabled => enabled;
 
 		public bool FunctionWhenDisabled => false;
@@ -162,6 +166,14 @@ namespace WIDVE.Paths
 			AddToSequence(Path);
 		}
 
+		void Start()
+		{
+			if(Application.IsPlaying(this))
+			{
+				if(RotateOnStart) SetRotation(Position, Rotate);
+			}
+		}
+
 		void OnDisable()
 		{
 			//remove this object from the path's path object sequence
@@ -223,6 +235,7 @@ namespace WIDVE.Paths
 				//draw settings
 				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_position)));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_lockWorldPosition)));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_rotateOnStart)));
 
 				//draw rotation settings
 				DrawRotationSettings(serializedObject.FindProperty(nameof(_rotate)));

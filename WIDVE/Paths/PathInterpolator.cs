@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using WIDVE.Utilities;
-using UnityEngine.XR.WSA.Input;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif

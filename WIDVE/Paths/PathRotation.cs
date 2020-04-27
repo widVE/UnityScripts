@@ -27,8 +27,6 @@ namespace WIDVE.Paths
         bool[] _rotate = { false, false, false };
         public bool[] Rotate => _rotate;
 
-        bool ShouldRotate => Application.IsPlaying(this) || RotateInEditMode;
-
         void SetRotation(float position)
         {
             if(!PathPosition) return;
@@ -38,31 +36,24 @@ namespace WIDVE.Paths
 
         void EnableRotation(PathPosition pathPosition)
         {
-            if(!ShouldRotate) return;
-
             if(pathPosition) pathPosition.OnPositionChanged += SetRotation;
         }
 
         void DisableRotation(PathPosition pathPosition)
         {
-            if(!ShouldRotate) return;
-
             if(pathPosition) pathPosition.OnPositionChanged -= SetRotation;
         }
 
         void OnEnable()
         {
-            EnableRotation(PathPosition);
+            if(!Application.IsPlaying(this) && RotateInEditMode) EnableRotation(PathPosition);
         }
 
         void Start()
         {
-            if(RotateOnStart)
+            if(RotateOnStart && Application.IsPlaying(this))
             {
-                if(ShouldRotate)
-                {
-                    if(PathPosition) SetRotation(PathPosition.Position);
-                }
+                if(PathPosition) SetRotation(PathPosition.Position);
             }
         }
 
@@ -105,7 +96,7 @@ namespace WIDVE.Paths
                 {
                     foreach(PathRotation pr in targets)
                     {
-                        if(pr.ShouldRotate && pr.PathPosition)
+                        if(pr.RotateInEditMode && pr.PathPosition)
                         {
                             pr.SetRotation(pr.PathPosition.Position);
                         }
@@ -114,7 +105,7 @@ namespace WIDVE.Paths
 
                 foreach(PathRotation pr in targets)
                 {
-                    pr.EnableRotation(pr.PathPosition);
+                    if(!Application.IsPlaying(pr) && pr.RotateInEditMode) pr.EnableRotation(pr.PathPosition);
                 }
             }
         }
