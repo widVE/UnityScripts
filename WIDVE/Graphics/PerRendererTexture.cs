@@ -26,9 +26,6 @@ namespace WIDVE.Graphics
             set => _customTexture = value;
         }
 
-        static MaterialPropertyBlock _mpb;
-        public static MaterialPropertyBlock MPB => _mpb ?? (_mpb = new MaterialPropertyBlock());
-
         void SetTexture()
         {
             if(!MaterialProperties) return;
@@ -37,14 +34,16 @@ namespace WIDVE.Graphics
             Renderer renderer = GetComponent<Renderer>();
             if(!renderer) return;
 
-            MaterialProperties.SetProperties(MPB, renderer.sharedMaterial);
+            MaterialPropertyBlock mpb = ShaderProperties.MPB;
 
-            MPB.SetTexture(TextureName, CustomTexture);
+            MaterialProperties.SetProperties(mpb, renderer.sharedMaterial);
 
-            renderer.SetPropertyBlock(MPB);
+            mpb.SetTexture(TextureName, CustomTexture);
+
+            renderer.SetPropertyBlock(mpb);
         }
 
-        void ClearTexture()
+        void Clear()
         {
             Renderer renderer = GetComponent<Renderer>();
             if(!renderer) return;
@@ -59,7 +58,7 @@ namespace WIDVE.Graphics
 
         void OnDisable()
         {
-            ClearTexture();
+            Clear();
         }
 
 #if UNITY_EDITOR
@@ -71,7 +70,23 @@ namespace WIDVE.Graphics
             {
                 EditorGUI.BeginChangeCheck();
 
-                base.OnInspectorGUI();
+                serializedObject.Update();
+
+                SerializedProperty materialProperties = serializedObject.FindProperty(nameof(_materialProperties));
+                EditorGUILayout.PropertyField(materialProperties);
+
+                SerializedProperty textureName = serializedObject.FindProperty(nameof(_textureName));
+                ShaderProperties shaderProperties = materialProperties.objectReferenceValue as ShaderProperties;
+                if(shaderProperties)
+                {
+                    textureName.stringValue = shaderProperties.DrawPropertyMenu(ShaderProperties.PropertyTypes.Texture,
+                                                                                textureName.stringValue,
+                                                                                "Texture Property");
+                }
+
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_customTexture)));
+
+                serializedObject.ApplyModifiedProperties();
 
                 bool changed = EditorGUI.EndChangeCheck();
 

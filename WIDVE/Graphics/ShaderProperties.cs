@@ -169,6 +169,8 @@ namespace WIDVE.Graphics
 
 		const bool USE_TEXTURES = false;
 
+		public enum PropertyTypes { Color, Float, Vector, Texture }
+
 		//shader to use
 		[SerializeField]
 		Shader _sourceShader;
@@ -205,6 +207,30 @@ namespace WIDVE.Graphics
 		{
 			get => _textureProperties ?? (_textureProperties = new TextureProperty[0]);
 			private set => _textureProperties = value;
+		}
+
+		static MaterialPropertyBlock _mpb;
+		public static MaterialPropertyBlock MPB => _mpb ?? (_mpb = new MaterialPropertyBlock());
+
+		public ShaderProperty[] GetProperties(PropertyTypes type)
+		{
+			switch(type)
+			{
+				case PropertyTypes.Color:
+					return ColorProperties;
+
+				case PropertyTypes.Float:
+					return FloatProperties;
+
+				case PropertyTypes.Vector:
+					return VectorProperties;
+
+				case PropertyTypes.Texture:
+					return TextureProperties;
+
+				default:
+					return null;
+			}
 		}
 
 		void SetPropertiesFromShader()
@@ -342,6 +368,8 @@ namespace WIDVE.Graphics
 		/// </summary>
 		public void SetProperties(MaterialPropertyBlock mpb, Material m)
 		{
+			mpb.Clear();
+
 			for(int i = 0; i < ColorProperties.Length; i++)
 			{
 				ColorProperty cp = ColorProperties[i];
@@ -438,6 +466,40 @@ namespace WIDVE.Graphics
 		}
 
 #if UNITY_EDITOR
+		public string DrawPropertyMenu(PropertyTypes type, string selectedProperty, string menuName = "Property")
+		{
+			//get all properties of the specified type
+			ShaderProperty[] properties = GetProperties(type);
+
+			if(properties == null || properties.Length == 0)
+			{
+				GUI.enabled = false;
+
+				EditorGUILayout.LabelField(menuName, $"No properties of type {System.Enum.GetName(typeof(PropertyTypes), type)} found!");
+
+				GUI.enabled = true;
+
+				return string.Empty;
+			}
+
+			//store property names
+			string[] propertyNames = new string[properties.Length];
+			for(int i = 0; i < propertyNames.Length; i++)
+			{
+				propertyNames[i] = properties[i].Name;
+			}
+
+			//draw dropdown menu
+			int initialSelection = Mathf.Max(0, System.Array.IndexOf(propertyNames, selectedProperty));
+
+			int selection = EditorGUILayout.Popup(label: menuName,
+												  selectedIndex: initialSelection,
+												  displayedOptions: propertyNames);
+
+			//return name of selected property
+			return propertyNames[selection];
+		}
+
 		[CanEditMultipleObjects]
 		[CustomEditor(typeof(ShaderProperties))]
 		class Editor : UnityEditor.Editor
