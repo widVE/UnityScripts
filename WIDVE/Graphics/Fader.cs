@@ -46,6 +46,8 @@ namespace WIDVE.Graphics
 				}
 			}
 
+			Dictionary<string, Color> initialColors = new Dictionary<string, Color>();
+
 			for(int i = 0; i < Renderers.Length; i++)
 			{
 				//for each renderer:
@@ -58,8 +60,12 @@ namespace WIDVE.Graphics
 				}
 				else if(!r.enabled) r.enabled = true;
 
-				//initialize property block
-				ShaderProperties.SetProperties(MPB, r.sharedMaterial);
+				//initialize property block with default material values
+				ShaderProperties.SetProperties(MPB, r.sharedMaterial, clear: true);
+
+				//add per-renderer colors back in
+				PerRendererColor prc = r.GetComponent<PerRendererColor>();
+				if(prc) MPB.SetColor(prc.ColorName, prc.Color);
 
 				//set alpha value of all colors
 				ShaderProperties.SetAlpha(MPB, alpha);

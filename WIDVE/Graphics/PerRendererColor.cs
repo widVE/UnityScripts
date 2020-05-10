@@ -12,17 +12,29 @@ namespace WIDVE.Graphics
     {
         [SerializeField]
         ShaderProperties _properties;
-        ShaderProperties Properties => _properties;
+        public ShaderProperties Properties
+        {
+            get => _properties;
+            set => _properties = value;
+        }
 
         [SerializeField]
         Color _color;
-        Color Color => _color;
+        public Color Color
+        {
+            get => _color;
+            set => _color = value;
+        }
 
         [SerializeField]
-        string _colorName = "_Color";
-        string ColorName => _colorName;
+        string _colorName = "_BaseColor";
+        public string ColorName
+        {
+            get => _colorName;
+            set => _colorName = value;
+        }
 
-        void SetColor()
+        public void SetColor()
         {
             if(!Properties) return;
 
@@ -38,7 +50,7 @@ namespace WIDVE.Graphics
             renderer.SetPropertyBlock(mpb);
         }
 
-        void Clear()
+        public void Clear()
         {
             Renderer renderer = GetComponent<Renderer>();
             if(!renderer) return;
@@ -47,6 +59,11 @@ namespace WIDVE.Graphics
         }
 
         void OnEnable()
+        {
+            SetColor();
+        }
+
+        void Start()
         {
             SetColor();
         }

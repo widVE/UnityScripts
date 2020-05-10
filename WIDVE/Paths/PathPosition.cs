@@ -248,15 +248,22 @@ namespace WIDVE.Paths
 				{
 					//set hide flags if they were not already set
 					if(SHF == null) SetHideFlags();
-
-					UpdatePosition();
+					
+					//update position
+					foreach(PathPosition pp in targets)
+					{
+						UpdatePosition(pp);
+					}
 				}
 			}
 
 			void UpdatePosition()
 			{
-				PathPosition pathPosition = target as PathPosition;
+				UpdatePosition(target as PathPosition);
+			}
 
+			void UpdatePosition(PathPosition pathPosition)
+			{
 				pathPosition.SetPosition(pathPosition.Position, true);
 				EditorUtility.SetDirty(pathPosition.transform);
 			}

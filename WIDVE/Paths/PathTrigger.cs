@@ -38,10 +38,10 @@ namespace WIDVE.Paths
 			if(pathObject == Position) return;
 
 			//if the object has a PathEvent, trigger it now
-			IPathEvent pathEvent = pathObject.GetComponent<IPathEvent>();
-			if(pathEvent != null)
+			IPathEvent[] pathEvents = pathObject.GetComponents<IPathEvent>();
+			foreach(IPathEvent ipe in pathEvents)
 			{
-				pathEvent.Trigger(this);
+				ipe.Trigger(this);
 			}
 
 			//afterwards, notify that an object has been triggered

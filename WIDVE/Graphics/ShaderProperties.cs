@@ -366,9 +366,9 @@ namespace WIDVE.Graphics
 		/// <summary>
 		/// Sets the MaterialPropertyBlock to have all properties from the given Material.
 		/// </summary>
-		public void SetProperties(MaterialPropertyBlock mpb, Material m)
+		public void SetProperties(MaterialPropertyBlock mpb, Material m, bool clear = true)
 		{
-			mpb.Clear();
+			if(clear) mpb.Clear();
 
 			for(int i = 0; i < ColorProperties.Length; i++)
 			{

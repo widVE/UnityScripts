@@ -8,7 +8,8 @@ using UnityEditorInternal;
 using WIDVE.Patterns;
 
 namespace WIDVE.Utilities
-{ 
+{
+	[ExecuteAlways]
 	public class Interpolator : MonoBehaviour
 	{
 		[SerializeField]
@@ -26,7 +27,7 @@ namespace WIDVE.Utilities
 		/// <summary>
 		/// Current smoothed interpolation value (between 0 and 1).
 		/// </summary>
-		public float Value => Mathf.Clamp01(Smoothing.Evaluate(RawValue));
+		public float Value => EvaluateValue(RawValue);
 
 		[SerializeField]
 		[HideInInspector]
@@ -51,6 +52,11 @@ namespace WIDVE.Utilities
 		/// </summary>
 		public event ValueChangedDelegate ValueChanged;
 
+		float EvaluateValue(float value)
+		{
+			return Mathf.Clamp01(Smoothing.Evaluate(value));
+		}
+
 		/// <summary>
 		/// Sets the RawValue of this Interpolator and invokes the value changed events.
 		/// </summary>
@@ -70,11 +76,13 @@ namespace WIDVE.Utilities
 					GameObject io = InterpolatableObjects[i];
 					if(!io || !io.activeInHierarchy) continue;
 
-					//access the IInterpolatable interface from attached GameObjects
-					//test if this is actually faster than just calling GetComponent every time...
-					if(InterfaceCache.Get<IInterpolatable>(io) is IInterpolatable ii)
+					//set value on all IInterpolatable components from the attached GameObject
+					foreach(IInterpolatable ii in io.GetComponents<IInterpolatable>())
 					{
+						//skip disabled objects
 						if(!ii.IsActive()) continue;
+
+						//set the value!
 						ii.SetValue(Value);
 					}
 				}
@@ -243,6 +251,21 @@ namespace WIDVE.Utilities
 		}
 
 #if UNITY_EDITOR
+		void RefreshValue(GameObject instance)
+		{
+			SetRawValue(RawValue);
+		}
+
+		void OnEnable()
+		{
+			PrefabUtility.prefabInstanceUpdated += RefreshValue;
+		}
+
+		void OnDisable()
+		{
+			PrefabUtility.prefabInstanceUpdated -= RefreshValue;
+		}
+
 		[CanEditMultipleObjects]
 		[CustomEditor(typeof(Interpolator))]
 		class Editor : UnityEditor.Editor
