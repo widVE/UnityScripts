@@ -38,14 +38,22 @@ namespace WIDVE.Graphics
         {
             if(!Properties) return;
 
-            Renderer renderer = GetComponent<Renderer>();
+            Renderer renderer = GetComponentInChildren<Renderer>();
             if(!renderer) return;
 
-            MaterialPropertyBlock mpb = ShaderProperties.MPB;
+            SetColor(renderer, Properties, ColorName, Color);
+        }
 
-            Properties.SetProperties(mpb, renderer.sharedMaterial);
+        public static void SetColor(Renderer renderer, ShaderProperties shaderProperties, string colorName, Color color)
+        {
+            if(!renderer) return;
+            if(!shaderProperties) return;
 
-            mpb.SetColor(ColorName, Color);
+            MaterialPropertyBlock mpb = ShaderProperties.GetMPB();
+
+            shaderProperties.SetProperties(mpb, renderer.sharedMaterial);
+
+            mpb.SetColor(colorName, color);
 
             renderer.SetPropertyBlock(mpb);
         }

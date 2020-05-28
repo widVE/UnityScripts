@@ -28,19 +28,30 @@ namespace WIDVE.Graphics
 
         void SetTexture()
         {
-            if(!MaterialProperties) return;
-            if(!CustomTexture) return;
+            if(!CustomTexture)
+            {
+                Clear();
+                return;
+            }
 
-            Renderer renderer = GetComponent<Renderer>();
+            if(!MaterialProperties) return;
+
+            Renderer renderer = GetComponentInChildren<Renderer>();
             if(!renderer) return;
 
-            MaterialPropertyBlock mpb = ShaderProperties.MPB;
+            MaterialPropertyBlock mpb = ShaderProperties.GetMPB();
 
             MaterialProperties.SetProperties(mpb, renderer.sharedMaterial);
 
             mpb.SetTexture(TextureName, CustomTexture);
 
             renderer.SetPropertyBlock(mpb);
+        }
+
+        public void SetTexture(Texture texture)
+        {
+            CustomTexture = texture;
+            SetTexture();
         }
 
         void Clear()

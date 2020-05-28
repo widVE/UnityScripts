@@ -188,14 +188,19 @@ namespace WIDVE.Utilities
 					}
 
 					//perform lerp
+#if UNITY_EDITOR
+					//no coroutines in editor - just set the value for testing
+					Target.SetRawValue(End);
+#else
 					LerpIEnumerator = InterpolateOverTime(End, time);
 					Target.ActiveLerp = LerpIEnumerator;
 					Target.StartCoroutine(LerpIEnumerator);
+#endif
 				}
 
 				public override void Undo()
 				{
-					if(Target.ActiveLerp == LerpIEnumerator)
+					if(LerpIEnumerator == null || Target.ActiveLerp == LerpIEnumerator)
 					{
 						//stop lerping
 						Target.StopLerp();

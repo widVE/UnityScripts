@@ -84,7 +84,11 @@ namespace WIDVE.Utilities
 		T[] _components;
 		protected T[] Components
 		{
-			get => _components ?? (_components = GetControlledComponents());
+			get
+			{
+				if(_components == null || _components.Length == 0) _components = GetControlledComponents();
+				return _components;
+			}
 			private set => _components = value;
 		}
 

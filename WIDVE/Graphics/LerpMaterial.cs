@@ -46,6 +46,9 @@ namespace WIDVE.Graphics
 				//for each renderer:
 				Renderer r = Renderers[i];
 
+				//just skip null renderers for now
+				if(!r) continue;
+
 				//initialize property block with r's current properties
 				//without this step, lerped values won't be set correctly
 				ShaderProperties.SetProperties(MPB, r.sharedMaterial);

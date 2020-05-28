@@ -10,6 +10,10 @@ namespace WIDVE.Utilities
 	public class BoxColliderBounds : MonoBehaviour
 	{
 		[SerializeField]
+		Renderer _source;
+		Renderer Source => _source ? _source : (_source = GetComponentInParent<Renderer>());
+
+		[SerializeField]
 		BoxCollider _collider;
 		BoxCollider Collider => _collider;
 
@@ -19,15 +23,13 @@ namespace WIDVE.Utilities
 
 		public void MatchColliderToBounds()
 		{
-			Renderer boundsRenderer = GetComponentInParent<Renderer>();
-
-			if(!boundsRenderer)
+			if(!Source)
 			{
 				Debug.Log("Error! No object found to use as bounds.");
 				return;
 			}
 
-			Bounds bounds = boundsRenderer.bounds;
+			Bounds bounds = Source.bounds;
 
 			Collider.center = transform.InverseTransformPoint(bounds.center);
 			Collider.size = (bounds.extents + Padding) * 2;

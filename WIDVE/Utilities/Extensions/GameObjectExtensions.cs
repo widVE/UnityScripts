@@ -186,6 +186,20 @@ namespace WIDVE.Utilities
 		}
 
 		/// <summary>
+		/// Calls EditorUtility.SetDirty() on the specified GameObject.
+		/// </summary>
+		/// <returns>True if SetDirty was called, false otherwise.</returns>
+		public static bool SetDirty(this GameObject gameObject)
+		{
+#if UNITY_EDITOR
+			EditorUtility.SetDirty(gameObject);
+			return true;
+#else
+			return false;
+#endif
+		}
+
+		/// <summary>
 		/// In Edit mode, marks the scene containing this GameObject as dirty.
 		/// <para>In Prefab mode, marks the prefab asset containing this GameObject as dirty.</para>
 		/// <para>In Play mode, does nothing.</para>

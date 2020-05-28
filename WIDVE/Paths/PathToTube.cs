@@ -69,7 +69,9 @@ namespace WIDVE.Paths
 
 				base.OnInspectorGUI();
 
-				if(EditorGUI.EndChangeCheck())
+				bool changed = EditorGUI.EndChangeCheck();
+
+				if(GUILayout.Button("Create Tube") || changed)
 				{
 					foreach(PathToTube ptt in targets)
 					{

@@ -22,6 +22,8 @@ namespace WIDVE.Graphics
                 g.color = Color.Lerp(ColorA, ColorB, t);
             }
 
+            UnityEngine.UI.Image image = null;
+
             if(trackValue) CurrentValue = t;
         }
 

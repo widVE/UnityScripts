@@ -13,22 +13,22 @@ namespace WIDVE.Graphics
 	{
 		[SerializeField]
 		[Tooltip("ShaderProperties used by all Renderers controlled by this behaviour.")]
-		ShaderProperties _shaderProperties;
+		protected ShaderProperties _shaderProperties;
 		protected ShaderProperties ShaderProperties => _shaderProperties;
 
 		[SerializeField]
 		[Tooltip("Specifies which Renderers are affected by this object.")]
-		GameObjectExtensions.SearchModes _mode = GameObjectExtensions.SearchModes.Self;
-		GameObjectExtensions.SearchModes Mode => _mode;
+		protected GameObjectExtensions.SearchModes _mode = GameObjectExtensions.SearchModes.Self;
+		protected GameObjectExtensions.SearchModes Mode => _mode;
 
 		[SerializeField]
 		[HideInInspector]
-		List<GameObject> _objects;
-		List<GameObject> Objects => _objects ?? (_objects = new List<GameObject>());
+		protected List<GameObject> _objects;
+		protected List<GameObject> Objects => _objects ?? (_objects = new List<GameObject>());
 
 		[SerializeField]
 		[HideInInspector]
-		float _currentValue;
+		protected float _currentValue;
 		/// <summary>
 		/// The current value between 0 and 1 that this component is at.
 		/// </summary>
@@ -75,11 +75,48 @@ namespace WIDVE.Graphics
 		public abstract void SetValue(float value);
 
 #if UNITY_EDITOR
+		[ContextMenu("Refresh Renderers")]
+		void RefreshRenderers()
+		{
+			Renderers = GetRenderers();
+		}
+
 		[CanEditMultipleObjects]
 		[CustomEditor(typeof(RendererController), true)]
 		protected class Editor : UnityEditor.Editor
 		{
 			ReorderableList Objects;
+
+			protected bool DrawRCInspector()
+			{
+				EditorGUI.BeginChangeCheck();
+
+				serializedObject.Update();
+
+				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_shaderProperties)));
+
+				SerializedProperty mode = serializedObject.FindProperty(nameof(_mode));
+				EditorGUILayout.PropertyField(mode);
+
+				if(mode.enumValueIndex == (int)GameObjectExtensions.SearchModes.Custom)
+				{
+					Objects.DoLayoutList();
+				}
+
+				serializedObject.ApplyModifiedProperties();
+
+				bool somethingChanged = EditorGUI.EndChangeCheck();
+
+				if(somethingChanged)
+				{
+					foreach(RendererController rc in targets)
+					{
+						rc.Renderers = rc.GetRenderers();
+					}
+				}
+
+				return somethingChanged;
+			}
 
 			protected virtual void OnEnable()
 			{

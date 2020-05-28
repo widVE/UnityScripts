@@ -210,7 +210,13 @@ namespace WIDVE.Graphics
 		}
 
 		static MaterialPropertyBlock _mpb;
-		public static MaterialPropertyBlock MPB => _mpb ?? (_mpb = new MaterialPropertyBlock());
+		static MaterialPropertyBlock MPB => _mpb ?? (_mpb = new MaterialPropertyBlock());
+
+		public static MaterialPropertyBlock GetMPB()
+		{
+			MPB.Clear();
+			return MPB;
+		}
 
 		public ShaderProperty[] GetProperties(PropertyTypes type)
 		{

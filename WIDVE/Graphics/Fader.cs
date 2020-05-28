@@ -53,6 +53,9 @@ namespace WIDVE.Graphics
 				//for each renderer:
 				Renderer r = Renderers[i];
 
+				//just skip null/missing renderers for now - not sure how to keep the list up to date in every situation yet
+				if(!r) continue;
+
 				//turn renderer on or off
 				if(Mathf.Approximately(alpha, 0f))
 				{
