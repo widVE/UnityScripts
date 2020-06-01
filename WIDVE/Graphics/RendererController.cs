@@ -50,7 +50,11 @@ namespace WIDVE.Graphics
 		/// </summary>
 		protected Renderer[] Renderers
 		{
-			get => _renderers ?? (_renderers = GetRenderers());
+			get
+			{
+				if(_renderers == null || _renderers.Length == 0) _renderers = GetRenderers();
+				return _renderers;
+			}
 			private set => _renderers = value;
 		}
 

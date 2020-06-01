@@ -235,7 +235,7 @@ namespace WIDVE.Paths
 				//draw settings
 				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_position)));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_lockWorldPosition)));
-				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_rotateOnStart)));
+				//EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_rotateOnStart))); //not working...
 
 				//draw rotation settings
 				DrawRotationSettings(serializedObject.FindProperty(nameof(_rotate)));

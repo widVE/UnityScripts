@@ -13,7 +13,7 @@ namespace WIDVE.Paths
 
         [SerializeField]
         PathPosition _position;
-        PathPosition Position => _position;
+        public PathPosition Position => _position;
 
         [SerializeField]
         [Range(.1f, 5f)]
