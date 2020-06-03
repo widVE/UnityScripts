@@ -172,6 +172,7 @@ namespace WIDVE.IO
 				_pathIsValid = false;
 			}
 		}
+		string FilenameNoExt => System.IO.Path.GetFileNameWithoutExtension(Filename);
 
 		bool _pathIsValid = false;
 		bool PathIsValid => _pathIsValid;
@@ -212,14 +213,15 @@ namespace WIDVE.IO
 					}
 
 					//check that filename ends in the correct extension
+					string filename = Filename;
 					if (!string.IsNullOrEmpty(Extension) && 
-						!Filename.EndsWith(Extension, ignoreCase: true, System.Globalization.CultureInfo.CurrentCulture))
-					{   
-						Filename += '.' + Extension.Trim('.');
+						!filename.EndsWith(Extension, ignoreCase: true, System.Globalization.CultureInfo.CurrentCulture))
+					{
+						filename += '.' + Extension.Trim('.');
 					}
 
 					//combine folder and filename together to get the full path
-					_path = System.IO.Path.Combine(folderPath, Filename);
+					_path = System.IO.Path.Combine(folderPath, filename);
 
 					_pathIsValid = true;
 				}
@@ -274,14 +276,15 @@ namespace WIDVE.IO
 		/// </summary>
 		public abstract string Extension { get; }
 
-		public enum WriteModes { AlwaysOverwrite, OverwriteThenAppend, Append, ReadOnly }
+		public enum WriteModes { AlwaysOverwrite, OverwriteThenAppend, Append, ReadOnly, Increment }
 
 		[SerializeField]
 		[HideInInspector]
 		[Tooltip("AlwaysOverwrite: File will be overwritten each write.\n" +
 				 "OverwriteThenAppend: File will be overwritten on first write, then appended afterwards.\n" +
 				 "Append: File will be appended each write.\n" +
-				 "ReadOnly: Trying to write to this file will do nothing.")]
+				 "ReadOnly: Trying to write to this file will do nothing.\n" +
+				 "Increment: Filename will be incremented if the file already exists.")]
 		WriteModes _writeMode = WriteModes.Append;
 		/// <summary>
 		/// Specifies how this DataFile will be written to.
@@ -363,6 +366,35 @@ namespace WIDVE.IO
 		/// </summary>
 		/// <param name="buffer">Array of ordered arrays of DataContainers.</param>
 		public virtual void WriteData(DataContainer[][] buffer) { }
+
+		/// <summary>
+		/// If WriteMode is Increment, increments the filename until it will not overwrite an existing file.
+		/// </summary>
+		protected virtual void IncrementFilename()
+		{
+			if(WriteMode != WriteModes.Increment) return;
+
+			while(FileExists)
+			{
+				//increment filename if file already exists
+				int i;
+				Filename = FilenameNoExt;
+				string[] filenameSplit = Filename.Split('_');
+				if(int.TryParse(filenameSplit[filenameSplit.Length - 1], out i))
+				{
+					//replace number at end of filename
+					i++;
+					filenameSplit[filenameSplit.Length - 1] = $"{i}";
+					Filename = string.Join("_", filenameSplit);
+				}
+				else
+				{
+					//no number in filename already
+					i = 1;
+					Filename += $"_{i}";
+				}
+			}
+		}
 
 #if UNITY_EDITOR
 		protected virtual void DrawExtension(SerializedObject serializedObject)
@@ -449,10 +481,15 @@ namespace WIDVE.IO
 
 				if (changed)
 				{  
-					//if something changed, probably need to update the path
 					foreach(DataFile df in targets)
 					{
+						//no extensions in filenames!
+						df._filename = System.IO.Path.GetFileNameWithoutExtension(df._filename);
+
+						//if something changed, probably need to update the path
 						df._pathIsValid = false;
+
+						EditorUtility.SetDirty(df);
 					}
 				}
 			}

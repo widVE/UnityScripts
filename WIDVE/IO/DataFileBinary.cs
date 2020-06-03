@@ -26,6 +26,9 @@ namespace WIDVE.IO
 				bool append = !ShouldOverwrite(WriteMode, TimesOpened);
 				FileMode fileMode = append ? FileMode.Append : FileMode.Create;
 
+				//increment filename?
+				IncrementFilename();
+
 				//open and return writer
 				Stream stream = File.Open(Path, fileMode);
 				TimesOpened++;

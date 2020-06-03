@@ -19,8 +19,13 @@ namespace WIDVE.IO
 
 			else
 			{
+				//append or overwrite?
 				bool append = !ShouldOverwrite(WriteMode, TimesOpened);
 				TimesOpened++;
+
+				//optional: increment filename
+				IncrementFilename();
+
 				return new StreamWriter(Path, append);
 			}
 		}
