@@ -1,14 +1,28 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace WIDVE.Utilities
 {
     public abstract class Selector : MonoBehaviour
     {
         [SerializeField]
+		//[HideInInspector]
         LayerMask _layers;
         protected LayerMask Layers => _layers;
+
+		[SerializeField]
+		//[HideInInspector]
+		bool _separateHighlightLayers = false;
+		protected bool SeparateHighlightLayers => _separateHighlightLayers;
+
+		[SerializeField]
+		//[HideInInspector]
+		LayerMask _highlightLayers;
+		protected LayerMask HighlightLayers => _highlightLayers;
 
 		[SerializeField]
 		ButtonFloat _triggerButton;
@@ -87,6 +101,7 @@ namespace WIDVE.Utilities
 			for(int i = 0; i < selectables.Count; i++)
 			{
 				selectables[i].Select(this);
+				Debug.Log($"Selecting {selectables[i]}");
 			}
 
 			//also select any UI Buttons
@@ -94,6 +109,7 @@ namespace WIDVE.Utilities
 			for(int i = 0; i < buttons.Count; i++)
 			{
 				buttons[i].onClick?.Invoke();
+				Debug.Log($"Clicking button {buttons[i]}");
 			}
 		}
 
@@ -117,5 +133,33 @@ namespace WIDVE.Utilities
 			//remove any highlighting
 			Highlight(EmptySelection);
 		}
+
+#if UNITY_EDITOR
+		[CanEditMultipleObjects]
+		//[CustomEditor(typeof(Selector), true)]
+		class Editor : UnityEditor.Editor
+		{
+			public override void OnInspectorGUI()
+			{
+				serializedObject.Update();
+
+				//draw layers
+				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_layers)));
+
+				SerializedProperty separateHighlightLayers = serializedObject.FindProperty(nameof(_separateHighlightLayers));
+				EditorGUILayout.PropertyField(separateHighlightLayers);
+
+				if(separateHighlightLayers.boolValue)
+				{
+					EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_highlightLayers)));
+				}
+
+				//draw everything else
+				DrawDefaultInspector();
+
+				serializedObject.ApplyModifiedProperties();
+			}
+		}
+#endif
 	}
 }
