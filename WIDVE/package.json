@@ -1,7 +1,11 @@
 {
-    "name": "com.widve.unityscripts",
-    "version": "1.0.0",
-    "displayName": "WIDVE Unity Scripts",
-    "description": "Various useful C# scripts for use in projects.",
-    "unity": "2019.2"
+  "name": "com.widve.unityscripts",
+  "version": "1.0.0",
+  "displayName": "WIDVE Unity Scripts",
+  "description": "Various useful C# scripts for use in projects.",
+  "unity": "2019.2",
+  "type": "library",
+  "dependencies": {
+    "com.unity.textmeshpro": "2.0.1"
+  }
 }

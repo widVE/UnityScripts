@@ -10,6 +10,10 @@ namespace WIDVE.Utilities
 		float _range = 10f;
 		float Range => _range;
 
+		[SerializeField]
+		LaserPointerVisual _visual;
+		public LaserPointerVisual Visual => _visual;
+
 		RaycastHit? Cast(LayerMask layers)
 		{
 			RaycastHit hit;
@@ -38,11 +42,17 @@ namespace WIDVE.Utilities
 
 				//highlight anything hit by the ray
 				Highlight(colliders);
+
+				//update laser line
+				Visual?.UpdateVisual(highlightHit);
+
 			}
 			else
 			{
 				//nothing to highlight this frame
 				Highlight(EmptySelection);
+
+				Visual?.UpdateVisual(null);
 			}
 
 			//process selection
@@ -56,7 +66,6 @@ namespace WIDVE.Utilities
 					Select(colliders);
 				}
 			}
-
 		}
 	}
 }

@@ -258,15 +258,19 @@ namespace WIDVE.Utilities
 			}
 		}
 
+		void OnEnable()
+		{
+#if UNITY_EDITOR
+			PrefabUtility.prefabInstanceUpdated += RefreshValue;
+#endif
+			//update value when enabled
+			SetRawValue(RawValue);
+		}
+
 #if UNITY_EDITOR
 		void RefreshValue(GameObject instance)
 		{
 			SetRawValue(RawValue);
-		}
-
-		void OnEnable()
-		{
-			PrefabUtility.prefabInstanceUpdated += RefreshValue;
 		}
 
 		void OnDisable()

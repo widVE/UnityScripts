@@ -64,8 +64,7 @@ namespace WIDVE.Utilities
 					if (gameObject.IsTopLevelSelection()) Draw();
 					break;
 				case DrawModes.IfNotSelected:
-					if (gameObject.IsTopLevelSelection()) Draw();
-					else if (!gameObject.IsSelected()) Draw();
+					if (!gameObject.IsSelected()) Draw();
 					break;
 			}
 		}
@@ -241,6 +240,8 @@ namespace WIDVE.Utilities
 			{	//draw properties based on current type...
 				serializedObject.Update();
 
+				Gizmo gizmo = target as Gizmo;
+
 				EditorGUILayout.PropertyField(Type);
 
 				if (Type.enumValueIndex != (int)Types.Texture)
@@ -293,6 +294,14 @@ namespace WIDVE.Utilities
 				if (Type.enumValueIndex == (int)Types.Mesh || Type.enumValueIndex == (int)Types.WireMesh)
 				{
 					EditorGUILayout.PropertyField(Mesh);
+
+					//try to grab the mesh automatically
+					if(Mesh.objectReferenceValue == null)
+					{
+						MeshFilter mf = gizmo.GetComponentInParent<MeshFilter>();
+						if(mf && mf.sharedMesh != null) Mesh.objectReferenceValue = mf.sharedMesh;
+					}
+
 					EditorGUILayout.PropertyField(MeshPosition);
 					EditorGUILayout.PropertyField(MeshRotation);
 					EditorGUILayout.PropertyField(MeshScale);

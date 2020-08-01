@@ -16,9 +16,16 @@ namespace WIDVE.Oculus
 			set => _ovrAxis = value;
 		}
 
+		const float DEADZONE = .1f;
+
 		public override float GetRawValue()
 		{
 			return OVRInput.Get(OVRAxis);
+		}
+
+		public override bool GetHeld()
+		{
+			return OVRInput.Get(OVRAxis) > DEADZONE;
 		}
 	}
 }

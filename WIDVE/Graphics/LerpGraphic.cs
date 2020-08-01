@@ -14,15 +14,30 @@ namespace WIDVE.Graphics
         Color _colorB = Color.white;
         Color ColorB => _colorB;
 
+        [SerializeField]
+        [Tooltip("If ColorName is given, sets the named color on the material used by each Graphic.")]
+        string _colorName = "";
+        public string ColorName
+		{
+            get => _colorName;
+            set => _colorName = value;
+		}
+
         public void Lerp(float t, bool trackValue = true)
         {
+            Color lerpedColor = Color.Lerp(ColorA, ColorB, t);
+
             for(int i = 0; i < Components.Length; i++)
             {
                 UnityEngine.UI.Graphic g = Components[i];
-                g.color = Color.Lerp(ColorA, ColorB, t);
-            }
+                g.color = lerpedColor;
 
-            UnityEngine.UI.Image image = null;
+                //also set color by name, for when setting the Graphic's color has no effect...
+                if(!string.IsNullOrEmpty(ColorName))
+                {
+                    g.material.SetColor(ColorName, lerpedColor);
+                }
+            }
 
             if(trackValue) CurrentValue = t;
         }

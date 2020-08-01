@@ -4,6 +4,7 @@ using UnityEngine;
 using WIDVE.IO;
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditorInternal;
 #endif
 
 namespace WIDVE.Utilities
@@ -37,6 +38,9 @@ namespace WIDVE.Utilities
 
         public void SaveScreenshot()
         {
+#if UNITY_EDITOR
+            InternalEditorUtility.SetShowGizmos(false);
+#endif
             UpdateCameraSettings();
 
             ScreenshotCamera.Render();
@@ -44,6 +48,8 @@ namespace WIDVE.Utilities
             ScreenshotFile.Save(ScreenshotTexture);
 
 #if UNITY_EDITOR
+            InternalEditorUtility.SetShowGizmos(true);
+
             AssetDatabase.Refresh();
 
             Debug.Log($"Saved screenshot to {ScreenshotFile.RelativePath}");
