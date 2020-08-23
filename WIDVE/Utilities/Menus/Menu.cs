@@ -13,8 +13,14 @@ namespace WIDVE.Utilities
         GameObject _menuObject;
         public GameObject MenuObject => _menuObject;
 
+        [SerializeField]
+        bool _startClosed = false;
+        bool StartClosed => _startClosed;
+
         FiniteStateMachine _fsm;
         protected StateMachine SM => _fsm ?? (_fsm =  new FiniteStateMachine());
+
+        public bool IsOpen => SM.CurrentState is States.Open;
 
         protected void SetState(OpenOrClosed ooc)
 		{
@@ -30,6 +36,12 @@ namespace WIDVE.Utilities
         public void Open()
 		{
             SM.SetState(new States.Open(this));
+		}
+
+		void Start()
+		{
+            if(StartClosed) Close();
+            else Open();
 		}
 
 		protected class States
