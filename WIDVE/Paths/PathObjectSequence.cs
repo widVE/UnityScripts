@@ -180,6 +180,19 @@ namespace WIDVE.Paths
 			Sort();
 		}
 
+		void OnDrawGizmosSelected()
+		{
+			if(!enabled) return;
+
+			Gizmos.matrix = Matrix4x4.identity;
+			Gizmos.color = Color.gray;
+
+			foreach(PathObject po in Objects)
+			{
+				Gizmos.DrawWireSphere(Path.path.GetPointAtTime(po.Position), .25f);
+			}
+		}
+
 #if UNITY_EDITOR
 		[CanEditMultipleObjects]
 		[CustomEditor(typeof(PathObjectSequence))]

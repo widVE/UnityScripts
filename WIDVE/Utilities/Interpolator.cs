@@ -188,9 +188,10 @@ namespace WIDVE.Utilities
 					}
 
 					//perform lerp
-					if(!Application.isPlaying)
+					if(!Application.isPlaying || !Target.gameObject.activeInHierarchy)
 					{
-						//no coroutines in edit mode - just set the value for testing
+						//no coroutines in edit mode or if target's GameObject is disabled
+						//just set the value for testing
 						Target.SetRawValue(End);
 					}
 					else

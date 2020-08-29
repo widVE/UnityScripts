@@ -29,13 +29,16 @@ namespace WIDVE.Paths
 
 		public event System.Action<PathObject> OnTrigger;
 
-		void ProcessPathObject(PathObject pathObject)
+		bool ProcessPathObject(PathObject pathObject)
 		{
+			//don't process anything if disabled
+			if(!enabled) return false;
+
 			//skip objects on the wrong layers
-			if(!Layers.Contains(pathObject.gameObject.layer)) return;
+			if(!Layers.Contains(pathObject.gameObject.layer)) return false;
 
 			//don't let the trigger trigger itself
-			if(pathObject == Position) return;
+			if(pathObject == Position) return false;
 
 			//if the object has a PathEvent, trigger it now
 			IPathEvent[] pathEvents = pathObject.GetComponents<IPathEvent>();
@@ -46,11 +49,12 @@ namespace WIDVE.Paths
 
 			//afterwards, notify that an object has been triggered
 			OnTrigger?.Invoke(pathObject);
+			return true;
 		}
 
 		public void UpdatePosition(float position)
 		{
-			if(!enabled) return;
+			if(!Position) return;
 			if(!Application.IsPlaying(this)) return;
 
 			//don't update if position hasn't changed
@@ -85,7 +89,11 @@ namespace WIDVE.Paths
 		{
 			//return to the starting point without triggering anything
 			enabled = false;
-			if(Position) Position.SetPosition(0);
+			if(Position)
+			{
+				Position.SetPosition(0);
+				UpdatePosition(Position.Position);
+			}
 			enabled = true;
 		}
 		
