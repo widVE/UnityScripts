@@ -80,6 +80,8 @@ namespace WIDVE.Graphics
 			//remove any property block overrides by lerping to either 0 or 1
 			if(CurrentMaterial == MaterialA) Lerp(0, false);
 			else Lerp(1, false);
+
+			RemoveMaterialPropertyBlock();
 		}
 	}
 }

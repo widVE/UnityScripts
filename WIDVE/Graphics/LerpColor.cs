@@ -52,6 +52,7 @@ namespace WIDVE.Graphics
         protected void OnDisable()
         {
             Lerp(0, false);
+            RemoveMaterialPropertyBlock();
         }
 
 #if UNITY_EDITOR

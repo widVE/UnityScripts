@@ -23,7 +23,7 @@ namespace WIDVE.Utilities
 			else return null;
 		}
 
-		void Update()
+		void ProcessSelection()
 		{
 			//cast rays every frame
 			RaycastHit? _selectHit = Cast(Layers);
@@ -66,6 +66,11 @@ namespace WIDVE.Utilities
 					Select(colliders);
 				}
 			}
+		}
+
+		void Update()
+		{
+			ProcessSelection();
 		}
 	}
 }

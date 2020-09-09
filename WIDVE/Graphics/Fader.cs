@@ -95,6 +95,7 @@ namespace WIDVE.Graphics
 		{
 			//remove any fading
 			SetAlpha(1, false);
+			RemoveMaterialPropertyBlock();
 		}
 
 #if UNITY_EDITOR

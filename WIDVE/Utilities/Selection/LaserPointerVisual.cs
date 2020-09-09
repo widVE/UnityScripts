@@ -36,17 +36,23 @@ namespace WIDVE.Utilities
                 //update material
                 Line.sharedMaterial = HitMaterial;
 
-                //extend laser to target
-                Vector3 hitLocalPoint = Line.transform.InverseTransformPoint(hit.Value.point);
-                Line.SetPosition(1, hitLocalPoint);
+                if(ExtendToTarget)
+                {
+                    //extend laser to target
+                    Vector3 hitLocalPoint = Line.transform.InverseTransformPoint(hit.Value.point);
+                    Line.SetPosition(1, hitLocalPoint);
+                }
             }
 			else
 			{
                 //nothing was hit
                 Line.sharedMaterial = NoHitMaterial;
 
-                //reset line length
-                Line.SetPosition(1, LineEndPoint);
+                if(ExtendToTarget)
+                {
+                    //reset line length
+                    Line.SetPosition(1, LineEndPoint);
+                }
             }
 		}
 

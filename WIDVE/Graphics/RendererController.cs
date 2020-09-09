@@ -76,6 +76,14 @@ namespace WIDVE.Graphics
 			}
 		}
 
+		protected void RemoveMaterialPropertyBlock()
+		{
+			for(int i = 0; i < Renderers.Length; i++)
+			{
+				Renderers[i].SetPropertyBlock(null);
+			}
+		}
+
 		public abstract void SetValue(float value);
 
 #if UNITY_EDITOR
