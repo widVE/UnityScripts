@@ -19,7 +19,7 @@ namespace WIDVE.Graphics
         }
 
         [SerializeField]
-        Color _color;
+        Color _color = Color.white;
         public Color Color
         {
             get => _color;

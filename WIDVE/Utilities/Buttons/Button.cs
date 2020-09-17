@@ -45,6 +45,11 @@ namespace WIDVE.Utilities
 		/// </summary>
 		public virtual void UpdateInput() { }
 
+		protected float GetSmoothedFloat(float rawValue)
+		{
+			return GetSmoothedFloat(rawValue, Smoothing, Multiplier);
+		}
+
 		protected static float GetSmoothedFloat(float rawValue, AnimationCurve smoothing, float multiplier)
 		{
 			float value = Mathf.Abs(smoothing.Evaluate(Mathf.Abs(rawValue)));
@@ -58,15 +63,15 @@ namespace WIDVE.Utilities
 	public abstract class Button<T> : Button where T : struct
 	{
 		/// <summary>
+		/// Returns current unsmoothed button value.
+		/// <para>Note: this is not affected by the Active toggle.</para>
+		/// </summary>
+		public abstract T GetRawValue();
+
+		/// <summary>
 		/// Returns current button value, adjusted by Multiplier and the Smoothing function.
 		/// <para>Note: this is *not* scaled by deltaTime.</para>
 		/// </summary>
 		public abstract T GetValue();
-
-		/// <summary>
-		/// Returns current unsmoothed button value.
-		/// <para>Note: this is not affected by the Active toggle.</para>
-		/// </summary>
-		public abstract T GetRawValue();	
 	}
 }
