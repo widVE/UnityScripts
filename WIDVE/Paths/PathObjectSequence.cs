@@ -55,6 +55,18 @@ namespace WIDVE.Paths
 			return Objects.Remove(pathObject);
 		}
 
+		public void UpdatePositions()
+		{
+			//update the position of every object in the sequence
+			for(int i = 0; i < Objects.Count; i++)
+			{
+				PathObject po = Objects[i];
+				if(!po) continue;
+
+				po.UpdatePosition(false);
+			}
+		}
+
 		public void Sort()
 		{
 			//remove any null path objects
@@ -119,10 +131,33 @@ namespace WIDVE.Paths
 		/// </summary>
 		public List<PathObject> GetObjects(float startPosition, float endPosition)
 		{
+			return GetObjects(startPosition, endPosition, true, false);
+		}
+
+		/// <summary>
+		/// Returns all PathObjects between startPosition (inclusive) and endPosition (inclusive).
+		/// <para>Objects are ordered from least to greatest position on the path.</para>
+		/// </summary>
+		public List<PathObject> GetObjectsInclusive(float startPosition, float endPosition)
+		{
+			return GetObjects(startPosition, endPosition, true, true);
+		}
+
+		/// <summary>
+		/// Returns all PathObjects between startPosition (exclusive) and endPosition (exclusive).
+		/// <para>Objects are ordered from least to greatest position on the path.</para>
+		/// </summary>
+		public List<PathObject> GetObjectsExclusive(float startPosition, float endPosition)
+		{
+			return GetObjects(startPosition, endPosition, false, false);
+		}
+
+		List<PathObject> GetObjects(float startPosition, float endPosition, bool inclusiveStart, bool inclusiveEnd)
+		{
 			List<PathObject> objects = new List<PathObject>();
 
-			//the 'inclusive' position will always be the start position parameter
-			float inclusivePosition = startPosition;
+			float inclusivePosition1 = startPosition;
+			float inclusivePosition2 = endPosition;
 
 			//start should be before end - swap them otherwise
 			if(startPosition > endPosition)
@@ -140,7 +175,8 @@ namespace WIDVE.Paths
 				float position = pathObject.Position;
 
 				if((position > startPosition && position < endPosition) ||
-					Mathf.Approximately(position, inclusivePosition))
+				   (inclusiveStart && Mathf.Approximately(position, inclusivePosition1)) ||
+				   (inclusiveEnd && Mathf.Approximately(position, inclusivePosition2)))
 				{
 					objects.Add(pathObject);
 				}
@@ -170,6 +206,8 @@ namespace WIDVE.Paths
 
 		public void OnNotify()
 		{
+			UpdatePositions();
+
 			Sort();
 		}
 
@@ -187,9 +225,11 @@ namespace WIDVE.Paths
 			Gizmos.matrix = Matrix4x4.identity;
 			Gizmos.color = Color.gray;
 
+			float scale = .25f * transform.lossyScale.x;
+
 			foreach(PathObject po in Objects)
 			{
-				Gizmos.DrawWireSphere(Path.path.GetPointAtTime(po.Position), .25f);
+				Gizmos.DrawWireSphere(Path.path.GetPointAtTime(po.Position), scale);
 			}
 		}
 

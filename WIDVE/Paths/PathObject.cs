@@ -28,6 +28,8 @@ namespace WIDVE.Paths
 
 		public abstract float Position { get; protected set; }
 
+		public abstract void UpdatePosition(bool notify = true);
+
 		public void SetPath(PathCreator path)
 		{
 			if(path == Path) return;

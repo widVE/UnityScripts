@@ -136,7 +136,6 @@ namespace WIDVE.Utilities
 
 			//draw each middle position
 			Gizmos.color = Color.blue;
-			List<Transform> objects = GetObjects();
 			for(int i = 1; i < NumObjects - 1; i++)
 			{
 				Gizmos.DrawSphere(GetPosition(i), .025f);

@@ -79,7 +79,7 @@ namespace WIDVE.Paths
 			return MaxDistance * position;
 		}
 
-		public void SetPosition(float position, bool saveWorldPosition = false)
+		public void SetPosition(float position, bool saveWorldPosition = false, bool notify = true)
 		{
 			if(!Path) return;
 
@@ -108,7 +108,7 @@ namespace WIDVE.Paths
 			sequence.Sort();
 
 			//notify that position has changed
-			OnPositionChanged?.Invoke(Position);
+			if(notify) OnPositionChanged?.Invoke(Position);
 		}
 
 		public void SetRotation(float position, bool[] rotationAxes = null)
@@ -149,10 +149,15 @@ namespace WIDVE.Paths
 			SetPosition(Path.path.GetClosestTimeOnPath(position), false);
 		}
 
-		public override void OnNotify()
+		public override void UpdatePosition(bool notify = true)
 		{
 			if(LockWorldPosition) SetWorldPosition(SavedWorldPosition);
-			else SetPosition(Position, true);
+			else SetPosition(Position, true, notify);
+		}
+
+		public override void OnNotify()
+		{
+			UpdatePosition();	
 		}
 
 		public void SetValue(float value)

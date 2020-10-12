@@ -34,6 +34,9 @@ namespace WIDVE.Paths
 			//don't process anything if disabled
 			if(!enabled) return false;
 
+			//skip disabled path objects
+			if(!pathObject.enabled || !pathObject.gameObject.activeInHierarchy) return false;
+
 			//skip objects on the wrong layers
 			if(!Layers.Contains(pathObject.gameObject.layer)) return false;
 
@@ -62,11 +65,14 @@ namespace WIDVE.Paths
 
 			//activate all objects between the last position and the new position
 			PathObjectSequence sequence = Position.Sequence;
-			List<PathObject> objects = sequence.GetObjects(LastPosition, position);
+			List<PathObject> objects;
 
 			if(LastPosition < position)
 			{
 				//moving forwards
+				if(position < 1) objects = sequence.GetObjects(LastPosition, position);
+				else objects = sequence.GetObjectsInclusive(LastPosition, position); //include any objects at the very end
+
 				for(int i = 0; i < objects.Count; i++)
 				{
 					ProcessPathObject(objects[i]);
@@ -75,6 +81,9 @@ namespace WIDVE.Paths
 			else
 			{
 				//moving backwards
+				if(position > 0) objects = sequence.GetObjects(LastPosition, position);
+				else objects = sequence.GetObjectsInclusive(LastPosition, position); //include any objects at the very start
+
 				for(int i = objects.Count - 1; i >= 0; i--)
 				{
 					ProcessPathObject(objects[i]);

@@ -24,7 +24,12 @@ namespace WIDVE.Graphics
         static Camera _mainCamera;
         static Camera MainCamera => (_mainCamera) ? _mainCamera : (_mainCamera = GetCamera());
 
-        static Camera GetCamera()
+        /// <summary>
+        /// Returns the Main camera in Play mode.
+        /// <para>Returns the SceneView camera in Edit mode.</para>
+        /// </summary>
+        /// <returns></returns>
+        public static Camera GetCamera()
         {
             if(Application.isPlaying)
             {
@@ -41,40 +46,15 @@ namespace WIDVE.Graphics
             return null;
         }
 
-        bool ShouldRotate(int i)
+        bool ShouldRotate(int axis)
         {
-            if(i == 0) return _rotateX;
-            else if(i == 1) return _rotateY;
-            else if(i == 2) return _rotateZ;
+            if(axis == 0) return _rotateX;
+            else if(axis == 1) return _rotateY;
+            else if(axis == 2) return _rotateZ;
             else return false;
         }
 
         void Rotate()
-        {
-            if(!MainCamera) return;
-
-            //rotate to face camera
-            Transform cameraTransform = MainCamera.transform;
-            Quaternion faceCameraRotation = Quaternion.LookRotation(cameraTransform.forward, cameraTransform.up);
-            Vector3 faceCameraAngles = faceCameraRotation.eulerAngles;
-
-            //lock rotation on some axes
-            Vector3 currentRotationAngles = transform.rotation.eulerAngles;
-            Vector3 rotationAngles = faceCameraAngles;
-            for(int i = 0; i < 3; i++)
-            {
-                if(!ShouldRotate(i))
-                {
-                    rotationAngles[i] = currentRotationAngles[i];
-                }
-            }
-
-            //set rotation
-            Quaternion rotation = Quaternion.Euler(rotationAngles);
-            transform.rotation = rotation;
-        }
-
-        void Rotate2()
         {
             if(!MainCamera) return;
 
@@ -108,7 +88,7 @@ namespace WIDVE.Graphics
         {
             if(!gameObject.ExistsInScene()) return;
 
-            Rotate2();
+            Rotate();
         }
 
 #if UNITY_EDITOR
@@ -126,7 +106,7 @@ namespace WIDVE.Graphics
                     EditorGUILayout.HelpBox(message, MessageType.Warning);
                 }
 
-                EditorGUILayout.LabelField("Rotation");
+                EditorGUILayout.LabelField("Rotation:");
 
                 EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_rotateX)), label: new GUIContent("X"));
                 EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_rotateY)), label: new GUIContent("Y"));
