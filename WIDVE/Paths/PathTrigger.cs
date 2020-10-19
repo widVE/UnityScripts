@@ -94,13 +94,13 @@ namespace WIDVE.Paths
 			LastPosition = position;
 		}
 
-		public void ReturnToStart()
+		public void ReturnToStart(bool reverse=false)
 		{
 			//return to the starting point without triggering anything
 			enabled = false;
 			if(Position)
 			{
-				Position.SetPosition(0);
+				Position.SetPosition(reverse ? 1 : 0);
 				UpdatePosition(Position.Position);
 			}
 			enabled = true;
