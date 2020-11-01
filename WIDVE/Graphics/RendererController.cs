@@ -80,6 +80,8 @@ namespace WIDVE.Graphics
 		{
 			for(int i = 0; i < Renderers.Length; i++)
 			{
+				if(!Renderers[i]) continue;
+
 				Renderers[i].SetPropertyBlock(null);
 			}
 		}
