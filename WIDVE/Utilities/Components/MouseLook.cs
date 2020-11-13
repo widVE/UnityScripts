@@ -23,8 +23,16 @@ namespace WIDVE.Utilities
         bool _invertY = false;
         bool InvertY => _invertY;
 
+        [SerializeField]
+        ScriptableEvent MenuOpenedEvent;
+
+        [SerializeField]
+        ScriptableEvent MenuClosedEvent;
+
         float XRotation = 0;
         float YRotation = 0;
+
+        bool ShouldLook = true;
 
         void Look(Vector2 lookVector)
 		{
@@ -36,9 +44,31 @@ namespace WIDVE.Utilities
             CameraParent.rotation = Quaternion.Euler(YRotation, XRotation, 0);
         }
 
-		void Update()
+        void EnableLook()
 		{
-            Look(new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")) * Speed);
+            ShouldLook = true;
+		}
+
+        void DisableLook()
+		{
+            ShouldLook = false;
+		}
+
+        void OnEnable()
+        {
+            MenuOpenedEvent.Event += DisableLook;
+            MenuClosedEvent.Event += EnableLook;
+        }
+
+        void OnDisable()
+        {
+            MenuOpenedEvent.Event -= DisableLook;
+            MenuClosedEvent.Event -= EnableLook;
+        }
+
+        void Update()
+		{
+            if(ShouldLook) Look(new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")) * Speed);
         }
 	}
 }

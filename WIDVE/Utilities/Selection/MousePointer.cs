@@ -10,6 +10,12 @@ namespace WIDVE.Utilities
 		Camera _playerCam;
 		Camera PlayerCam => _playerCam;
 
+		enum CastModes { MousePosition, CenterOfScreen }
+
+		[SerializeField]
+		CastModes _castFrom = CastModes.MousePosition;
+		CastModes CastFrom => _castFrom;
+
 		RaycastHit? Cast(LayerMask layers)
 		{
 			if(!PlayerCam)
