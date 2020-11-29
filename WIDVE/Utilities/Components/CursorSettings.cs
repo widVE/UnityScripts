@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using WIDVE.Patterns;
 
 namespace WIDVE.Utilities
 {
@@ -34,6 +35,31 @@ namespace WIDVE.Utilities
 		{
 			ShowCursor = _showCursor;
 			Constraints = _constraints;
+		}
+
+		public class Commands
+		{
+			public class ShowCursor : Command<CursorSettings>
+			{
+				readonly bool Show;
+				bool i_Show;
+
+				public ShowCursor(CursorSettings target, bool show) : base(target)
+				{
+					Show = show;
+				}
+
+				public override void Execute()
+				{
+					i_Show = Target.ShowCursor;
+					Target.ShowCursor = Show;
+				}
+
+				public override void Undo()
+				{
+					Target.ShowCursor = i_Show;
+				}
+			}
 		}
 	}
 }

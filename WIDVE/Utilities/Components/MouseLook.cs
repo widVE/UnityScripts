@@ -41,7 +41,7 @@ namespace WIDVE.Utilities
             XRotation += InvertX ? -lookVector.x : lookVector.x;
             YRotation += InvertY ? lookVector.y : -lookVector.y;
 
-            CameraParent.rotation = Quaternion.Euler(YRotation, XRotation, 0);
+            CameraParent.localRotation = Quaternion.Euler(YRotation, XRotation, 0);
         }
 
         void EnableLook()
