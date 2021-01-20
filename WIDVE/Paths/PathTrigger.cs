@@ -31,6 +31,12 @@ namespace WIDVE.Paths
 
 		bool ProcessPathObject(PathObject pathObject)
 		{
+			if(!pathObject)
+			{
+				Debug.Log("Null PathObject!");
+				return false;
+			}
+
 			//don't process anything if disabled
 			if(!enabled) return false;
 
@@ -65,6 +71,7 @@ namespace WIDVE.Paths
 
 			//activate all objects between the last position and the new position
 			PathObjectSequence sequence = Position.Sequence;
+			if(!sequence) return;
 			List<PathObject> objects;
 
 			if(LastPosition < position)
