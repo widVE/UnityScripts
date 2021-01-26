@@ -156,7 +156,7 @@ namespace WIDVE.Utilities
 				//set default values if no scene is available
 				Name = "NULL";
 				Index = -2; //set this to -2 because -1 already has a special meaning (see below)
-				ScenePath = null;
+				ScenePath = string.Empty;
 			}
 		}
 #endif
