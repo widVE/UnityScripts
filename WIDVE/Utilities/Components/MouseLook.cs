@@ -29,6 +29,9 @@ namespace WIDVE.Utilities
         [SerializeField]
         ScriptableEvent MenuClosedEvent;
 
+        [SerializeField]
+        bool ActiveAtStart = true;
+
         float XRotation = 0;
         float YRotation = 0;
 
@@ -66,7 +69,12 @@ namespace WIDVE.Utilities
             MenuClosedEvent.Event -= EnableLook;
         }
 
-        void Update()
+		void Start()
+		{
+            if(!ActiveAtStart) DisableLook();
+        }
+
+		void Update()
 		{
             if(ShouldLook) Look(new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")) * Speed);
         }
