@@ -1,0 +1,19 @@
+{
+    "name": "WIDVE.URP",
+    "rootNamespace": "",
+    "references": [
+        "GUID:e19b1a2c8fe40d74886128dafceae62d",
+        "GUID:15fc0a57446b3144c949da3e2b9737a9"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "WIDVE_URP"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
