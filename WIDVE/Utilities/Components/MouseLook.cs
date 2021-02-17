@@ -32,6 +32,9 @@ namespace WIDVE.Utilities
         [SerializeField]
         bool ActiveAtStart = true;
 
+        [SerializeField]
+        bool ActiveAtStartEditor = true;
+
         float XRotation = 0;
         float YRotation = 0;
 
@@ -47,12 +50,12 @@ namespace WIDVE.Utilities
             CameraParent.localRotation = Quaternion.Euler(YRotation, XRotation, 0);
         }
 
-        void EnableLook()
+        public void EnableLook()
 		{
             ShouldLook = true;
 		}
 
-        void DisableLook()
+        public void DisableLook()
 		{
             ShouldLook = false;
 		}
@@ -71,7 +74,11 @@ namespace WIDVE.Utilities
 
 		void Start()
 		{
+#if UNITY_EDITOR
+            if(!ActiveAtStartEditor) DisableLook();
+#else
             if(!ActiveAtStart) DisableLook();
+#endif
         }
 
 		void Update()

@@ -34,6 +34,8 @@ namespace WIDVE.Graphics
 
 		public bool AddToStack(Camera mainCamera, Camera overlayCamera)
 		{
+			if(!mainCamera) return false;
+
 			UniversalAdditionalCameraData cameraData = mainCamera.GetUniversalAdditionalCameraData();
 			if(cameraData)
 			{
@@ -45,6 +47,8 @@ namespace WIDVE.Graphics
 
 		public bool RemoveFromStack(Camera mainCamera, Camera overlayCamera)
 		{
+			if(!mainCamera) return false;
+
 			UniversalAdditionalCameraData cameraData = mainCamera.GetUniversalAdditionalCameraData();
 			if(cameraData)
 			{
