@@ -46,7 +46,7 @@ namespace WIDVE.Graphics
 				}
 			}
 
-			Dictionary<string, Color> initialColors = new Dictionary<string, Color>();
+			//Dictionary<string, Color> initialColors = new Dictionary<string, Color>();
 
 			for(int i = 0; i < Renderers.Length; i++)
 			{
