@@ -27,6 +27,18 @@ namespace WIDVE.Graphics
 		Material _transparentMaterial;
 		Material TransparentMaterial => _transparentMaterial;
 
+		[SerializeField]
+		[HideInInspector]
+		[Range(0, 1)]
+		float _minAlpha = 0;
+		float MinAlpha => _minAlpha;
+
+		[SerializeField]
+		[HideInInspector]
+		[Range(0, 1)]
+		float _maxAlpha = 1;
+		float MaxAlpha => _maxAlpha;
+
 		Material CurrentMaterial;
 
 		public void SetAlpha(float alpha, bool trackValue=true)
@@ -45,8 +57,6 @@ namespace WIDVE.Graphics
 					CurrentMaterial = m;
 				}
 			}
-
-			//Dictionary<string, Color> initialColors = new Dictionary<string, Color>();
 
 			for(int i = 0; i < Renderers.Length; i++)
 			{
@@ -70,8 +80,11 @@ namespace WIDVE.Graphics
 				PerRendererColor prc = r.GetComponent<PerRendererColor>();
 				if(prc) MPB.SetColor(prc.ColorName, prc.Color);
 
+				//scale alpha based on min/max alpha
+				float scaledAlpha = Mathf.Lerp(MinAlpha, MaxAlpha, alpha);
+
 				//set alpha value of all colors
-				ShaderProperties.SetAlpha(MPB, alpha);
+				ShaderProperties.SetAlpha(MPB, scaledAlpha);
 
 				//apply property block
 				r.SetPropertyBlock(MPB);
@@ -116,6 +129,20 @@ namespace WIDVE.Graphics
 				{
 					EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_opaqueMaterial)));
 					EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_transparentMaterial)));
+				}
+
+				EditorGUI.BeginChangeCheck();
+
+				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_minAlpha)));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_maxAlpha)));
+
+				if(EditorGUI.EndChangeCheck())
+				{
+					//refresh fading
+					foreach(Fader f in targets)
+					{
+						f.SetAlpha(f.CurrentValue);
+					}
 				}
 
 				serializedObject.ApplyModifiedProperties();
