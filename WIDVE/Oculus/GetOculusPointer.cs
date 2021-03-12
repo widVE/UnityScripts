@@ -25,7 +25,7 @@ namespace WIDVE.Oculus
 
             foreach(OVRRaycaster r in TargetRaycaster)
             {
-                if(r.pointer != oculusPointer) r.pointer = oculusPointer;
+                r.pointer = oculusPointer;
             }
 
             enabled = false;

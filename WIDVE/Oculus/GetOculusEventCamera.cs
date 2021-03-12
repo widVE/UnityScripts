@@ -28,8 +28,10 @@ namespace WIDVE.Oculus
 
 			foreach(Canvas c in TargetCanvas)
 			{
-                if(c.worldCamera != oculusCamera) c.worldCamera = oculusCamera;
-			}
+                c.worldCamera = oculusCamera;
+                c.gameObject.SetActive(false);
+                c.gameObject.SetActive(true);
+            }
 
             //done checking for oculus cameras and setting canvases
             enabled = false;
