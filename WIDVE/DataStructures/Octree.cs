@@ -6,7 +6,7 @@ namespace WIDVE.DataStructures
 {
     public class Octree<T> where T : System.IEquatable<T>
     {
-        public OctreeNode Root { get; private set; }
+        public Node Root { get; private set; }
 
         public int NumNodes { get; private set; }
 
@@ -17,17 +17,17 @@ namespace WIDVE.DataStructures
         public Octree(float minHalfSize, Vector3 center, float halfSize)
 		{
             MinHalfSize = minHalfSize;
-            Root = new OctreeNode(null, center, halfSize);
+            Root = new Node(null, center, halfSize);
             NumNodes = 1;
             NumItems = 0;
 		}
 
-        public OctreeNode Add(T item, Vector3 position)
+        public Node Add(T item, Vector3 position)
 		{
             return Root.Add(this, item, position);
 		}
 
-        public OctreeNode Remove(T item, Vector3 position)
+        public Node Remove(T item, Vector3 position)
 		{
             return Root.Remove(this, item, position);
         }
@@ -42,28 +42,28 @@ namespace WIDVE.DataStructures
             Root.DrawItemGizmos(0);
 		}
 
-        public T GetClosestItem(Vector3 position)
+        public T GetClosestItem(Vector3 position, bool drawGizmos = false)
 		{
-            OctreeNode.SearchItem? n_closestSearchItem = Root.GetClosestItem(position, new List<OctreeNode.SearchItem>());
+            Node.SearchItem? n_closestSearchItem = Root.GetClosestItem(position, new List<Node.SearchItem>(), drawGizmos);
             if(n_closestSearchItem != null)
 			{
-                OctreeNode.SearchItem closestSearchItem = (OctreeNode.SearchItem)n_closestSearchItem;
-                if(closestSearchItem.Type == OctreeNode.SearchItem.Types.Item) return closestSearchItem.Item.Item;
+                Node.SearchItem closestSearchItem = (Node.SearchItem)n_closestSearchItem;
+                if(closestSearchItem.Type == Node.SearchItem.Types.Item) return closestSearchItem.Item.Value;
 
             }
             return default(T);
 		}
 
-        public class OctreeNode
+        public class Node
         {
-            public class OctreeItem
+            public class Item
             {
-                public T Item;
+                public T Value;
                 public Vector3 Position;
 
-                public OctreeItem(T item, Vector3 position)
+                public Item(T value, Vector3 position)
                 {
-                    Item = item;
+                    Value = value;
                     Position = position;
                 }
             }
@@ -72,28 +72,30 @@ namespace WIDVE.DataStructures
 			{
                 public enum Types { Item, Node }
                 public Types Type;
-                public OctreeItem Item;
-                public OctreeNode Node;
+                public Item Item;
+                public Node Node;
                 public float Distance;
 
-                public SearchItem(OctreeItem item, Vector3 position)
+                public SearchItem(Item item, Vector3 position)
                 {
                     Type = Types.Item;
                     Item = item;
                     Node = null;
-                    Distance = Vector3.Distance(position, Item.Position);
+                    //Distance = Vector3.Distance(position, Item.Position);
+                    Distance = (position - Item.Position).sqrMagnitude;
                 }
 
-                public SearchItem(OctreeNode node, Vector3 position)
+                public SearchItem(Node node, Vector3 position)
 				{
                     Type = Types.Node;
                     Item = null;
                     Node = node;
-                    Distance = Node.MinDistance(position);
+                    //Distance = Node.MinDistance(position);
+                    Distance = Node.MinDistanceSquared(position);
                 }
 			}
 
-            OctreeNode Parent;
+            Node Parent;
 
             public Vector3 Center { get; private set; }
 
@@ -105,39 +107,49 @@ namespace WIDVE.DataStructures
 
             public Vector3 Max => new Vector3(Center.x + HalfSize, Center.y + HalfSize, Center.z + HalfSize);
 
-            public int Depth => GetDepth();
+            int _depth = -1;
+            public int Depth => _depth < 0 ? _depth = GetDepth() : _depth;
 
             public bool IsLeaf => Contents.Count != 0;
 
-            public List<OctreeItem> Contents;
+            public List<Item> Contents;
 
-            public OctreeNode[] Children;
+            public Node[] Children;
 
-            public OctreeNode(OctreeNode parent, Vector3 center, float halfSize)
+            public Node(Node parent, Vector3 center, float halfSize)
             {
                 Parent = parent;
                 Center = center;
                 HalfSize = halfSize;
-                Contents = new List<OctreeItem>();
-                Children = new OctreeNode[8];
+                Contents = new List<Item>();
+                Children = new Node[8];
                 for(int i = 0; i < Children.Length; i++)
                 {
                     Children[i] = null;
                 }
             }
 
-            public float MinDistance(Vector3 position)
+            public Vector3 ClosestPoint(Vector3 position)
 			{
+                //returns the closest position either within the node or on its surface   
                 Vector3 min = Min;
                 Vector3 max = Max;
-                float dX = Mathf.Min(Mathf.Abs(position.x - min.x), Mathf.Abs(position.x - max.x));
-                float dY = Mathf.Min(Mathf.Abs(position.y - min.y), Mathf.Abs(position.y - max.y));
-                float dZ = Mathf.Min(Mathf.Abs(position.z - min.z), Mathf.Abs(position.z - max.z));
-                return Mathf.Min(dX, dY, dZ);
+                float pX = Mathf.Clamp(position.x, min.x, max.x);
+                float pY = Mathf.Clamp(position.y, min.y, max.y);
+                float pZ = Mathf.Clamp(position.z, min.z, max.z);
+                return new Vector3(pX, pY, pZ);
             }
 
-            public SearchItem? GetClosestItem(Vector3 position, List<SearchItem> searchList)
+            public float MinDistanceSquared(Vector3 position)
 			{
+                Vector3 pNode = ClosestPoint(position);
+                return (position - pNode).sqrMagnitude;
+            }
+
+            public SearchItem? GetClosestItem(Vector3 position, List<SearchItem> searchList, bool drawGizmos)
+			{
+                if(drawGizmos) DrawNodeGizmos(-1, false);
+
 				if(IsLeaf)
 				{
                     //add contents to search list
@@ -156,7 +168,7 @@ namespace WIDVE.DataStructures
 				}
 
                 //sort list (farthest at start, closest at end)
-                searchList.Sort((x, y) => y.Distance.CompareTo(x.Distance));
+                searchList.Sort((x, y) => -x.Distance.CompareTo(y.Distance));
 
                 //check items in the list
                 while(searchList.Count > 0)
@@ -169,11 +181,15 @@ namespace WIDVE.DataStructures
 					{
                         case SearchItem.Types.Item:
                             //if this is an item, search is done
+                            //Debug.Log($"Found closest point to {position}: {searchItem.Item.Position} [d: {searchItem.Distance}]");
+                            if(drawGizmos) Gizmos.DrawWireSphere(position, .3f);
                             return searchItem;
                         default:
                         case SearchItem.Types.Node:
                             //if this is a node, search its children
-                            return searchItem.Node.GetClosestItem(position, searchList);
+                            //Debug.Log($"Getting closest point to {position} (checking node at depth {searchItem.Node.GetDepth()}) ({searchList.Count} items in searchList)");
+                            //if(drawGizmos) searchItem.Node.DrawNodeGizmos(-1, false);
+                            return searchItem.Node.GetClosestItem(position, searchList, drawGizmos);
 					}
 				}
 
@@ -219,17 +235,17 @@ namespace WIDVE.DataStructures
                 return new Color(x ? .9f : .1f, y ? .9f : .1f, z ? .9f : .1f);
             }
 
-            OctreeNode AddChild(Octree<T> tree, int index)
+            Node AddChild(Octree<T> tree, int index)
             {
                 Vector3 childCenter = IndexToChildCenter(index);
                 float childHalfSize = HalfSize / 2;
-                OctreeNode child = new OctreeNode(this, childCenter, childHalfSize);
+                Node child = new Node(this, childCenter, childHalfSize);
                 Children[index] = child;
                 tree.NumNodes++;
                 return child;
             }
 
-            public OctreeNode Add(Octree<T> tree, T item, Vector3 position)
+            public Node Add(Octree<T> tree, T item, Vector3 position)
             {
                 if(HalfSize > tree.MinHalfSize)
                 {
@@ -241,13 +257,13 @@ namespace WIDVE.DataStructures
                 else
                 {
                     //this is a leaf node; add the item
-                    Contents.Add(new OctreeItem(item, position));
+                    Contents.Add(new Item(item, position));
                     tree.NumItems++;
                     return this;
                 }
             }
 
-            public OctreeNode Remove(Octree<T> tree, T item, Vector3 position)
+            public Node Remove(Octree<T> tree, T item, Vector3 position)
             {
                 if(HalfSize > tree.MinHalfSize)
                 {
@@ -267,7 +283,7 @@ namespace WIDVE.DataStructures
                     //this is a leaf node; remove the item
                     for(int i = 0; i < Contents.Count; i++)
                     {
-                        if(Contents[i].Item.Equals(item))
+                        if(Contents[i].Value.Equals(item))
                         {
                             Contents.RemoveAt(i);
                             tree.NumItems--;
@@ -285,15 +301,18 @@ namespace WIDVE.DataStructures
                 return depth;
             }
 
-            public void DrawNodeGizmos(int index)
+            public void DrawNodeGizmos(int index, bool drawChildren = true)
             {
-                Gizmos.color = IndexToColor(index);
+                if(index >= 0) Gizmos.color = IndexToColor(index);
                 Gizmos.DrawWireCube(Center, Vector3.one * HalfSize * 2);
 
-                for(int i = 0; i < Children.Length; i++)
-				{
-                    if(Children[i] != null) Children[i].DrawNodeGizmos(i);
-				}
+                if(drawChildren)
+                {
+                    for(int i = 0; i < Children.Length; i++)
+                    {
+                        if(Children[i] != null) Children[i].DrawNodeGizmos(i);
+                    }
+                }
             }
 
             public void DrawItemGizmos(int index)
