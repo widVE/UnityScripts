@@ -78,7 +78,7 @@ namespace WIDVE.Graphics
 
 				//add per-renderer colors back in
 				PerRendererColor prc = r.GetComponent<PerRendererColor>();
-				if(prc) MPB.SetColor(prc.ColorName, prc.Color);
+				if(prc && prc.enabled) MPB.SetColor(prc.ColorName, prc.Color);
 
 				//scale alpha based on min/max alpha
 				float scaledAlpha = Mathf.Lerp(MinAlpha, MaxAlpha, alpha);

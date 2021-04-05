@@ -68,12 +68,12 @@ namespace WIDVE.Graphics
 
         void OnEnable()
         {
-            SetColor();
+            if(enabled) SetColor();
         }
 
         void Start()
         {
-            SetColor();
+            if(enabled) SetColor();
         }
 
         void OnDisable()
@@ -114,7 +114,10 @@ namespace WIDVE.Graphics
                 {
                     foreach(PerRendererColor prc in targets)
                     {
-                        prc.SetColor();
+                        if(prc.enabled)
+                        {
+                            prc.SetColor();
+                        }
                     }
                 }
             }
