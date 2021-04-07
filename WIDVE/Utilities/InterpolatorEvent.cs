@@ -15,14 +15,24 @@ namespace WIDVE.Utilities
 		Vector3 _envelope = Vector3.one;
 		Vector3 Envelope => _envelope;
 
+		bool Active = false;
+
 		public void LerpTo0(float time)
 		{
 			Interpolator.LerpTo0(time);
+			Active = false;
 		}
 
 		public void LerpTo1(float time)
 		{
 			Interpolator.LerpTo1(time);
+			Active = true;
+		}
+
+		public void Toggle(float time)
+		{
+			if(Active) LerpTo0(time);
+			else LerpTo1(time);
 		}
 
 		public void PlayEnvelope()
@@ -44,6 +54,11 @@ namespace WIDVE.Utilities
 			if(_envelope.x < 0) _envelope.x = 0;
 			if(_envelope.y < 0) _envelope.y = 0;
 			if(_envelope.z < 0) _envelope.z = 0;
+		}
+
+		void Start()
+		{
+			Active = Mathf.Approximately(Interpolator.Value, 1);
 		}
 	}
 }
