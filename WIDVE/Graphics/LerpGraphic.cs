@@ -15,7 +15,7 @@ namespace WIDVE.Graphics
         Color ColorB => _colorB;
 
         [SerializeField]
-        [Tooltip("If ColorName is given, sets the named color on the material used by each Graphic.")]
+        [Tooltip("Optional: if ColorName is given, sets the named color on the material used by each Graphic.")]
         string _colorName = "";
         public string ColorName
 		{
