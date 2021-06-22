@@ -29,6 +29,14 @@ namespace WIDVE.Utilities
 		Transform _followMe;
 		public Transform FollowMe => _followMe != null ? _followMe : (_followMe = GetFollowTarget());
 
+		[SerializeField]
+		Vector3 _scaleToApply = Vector3.one;
+		Vector3 ScaleToApply => _scaleToApply;
+		
+		[SerializeField]
+		Vector3 _offsetToApply = Vector3.zero;
+		Vector3 OffsetToApply => _offsetToApply;
+		
 		bool ShouldFollow
 		{
 			get
@@ -56,6 +64,9 @@ namespace WIDVE.Utilities
 
 			if(FollowPosition) transform.position = FollowMe.position;
 			if(FollowRotation) transform.rotation = FollowMe.rotation;
+			
+			transform.localScale = _scaleToApply;
+			transform.position += _offsetToApply;
 		}
 
 		void LateUpdate()
@@ -78,7 +89,9 @@ namespace WIDVE.Utilities
 				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_followPosition)));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_followRotation)));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_followInEditor)));
-
+				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_scaleToApply)));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(_offsetToApply)));
+				
 				serializedObject.ApplyModifiedProperties();
 			}
 		}
