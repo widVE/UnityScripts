@@ -41,8 +41,8 @@ namespace WIDVE.Utilities
         bool ShouldLook = true;
 
         void Look(Vector2 lookVector)
-		{
-            if(!CameraParent) return;
+        {
+            if (!CameraParent) return;
 
             XRotation += InvertX ? -lookVector.x : lookVector.x;
             YRotation += InvertY ? lookVector.y : -lookVector.y;
@@ -51,39 +51,39 @@ namespace WIDVE.Utilities
         }
 
         public void EnableLook()
-		{
+        {
             ShouldLook = true;
-		}
+        }
 
         public void DisableLook()
-		{
+        {
             ShouldLook = false;
-		}
+        }
 
         void OnEnable()
         {
-            MenuOpenedEvent.Event += DisableLook;
-            MenuClosedEvent.Event += EnableLook;
+            if (MenuOpenedEvent) MenuOpenedEvent.Event += DisableLook;
+            if (MenuClosedEvent) MenuClosedEvent.Event += EnableLook;
         }
 
         void OnDisable()
         {
-            MenuOpenedEvent.Event -= DisableLook;
-            MenuClosedEvent.Event -= EnableLook;
+            if (MenuOpenedEvent) MenuOpenedEvent.Event -= DisableLook;
+            if (MenuClosedEvent) MenuClosedEvent.Event -= EnableLook;
         }
 
-		void Start()
-		{
+        void Start()
+        {
 #if UNITY_EDITOR
             if(!ActiveAtStartEditor) DisableLook();
 #else
-            if(!ActiveAtStart) DisableLook();
+            if (!ActiveAtStart) DisableLook();
 #endif
         }
 
-		void Update()
-		{
-            if(ShouldLook) Look(new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")) * Speed);
+        void Update()
+        {
+            if (ShouldLook) Look(new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")) * Speed);
         }
-	}
+    }
 }
