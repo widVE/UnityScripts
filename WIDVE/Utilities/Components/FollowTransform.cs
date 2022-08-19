@@ -12,8 +12,12 @@ namespace WIDVE.Utilities
 	{
 		[SerializeField]
 		string _tag;
-		public string Tag => _tag;
-
+		public string Tag
+		{
+			get { return _tag;}
+			set { _tag = value;}
+		}
+		
 		[SerializeField]
 		bool _followPosition = true;
 		bool FollowPosition => _followPosition;
@@ -46,7 +50,9 @@ namespace WIDVE.Utilities
 				else return false;
 			}
 		}
-
+		
+		public void ResetFollowTarget() { _followMe = null; }
+		
 		public Transform GetFollowTarget()
 		{
 			GameObject[] tagObjects = GameObject.FindGameObjectsWithTag(Tag);

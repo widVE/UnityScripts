@@ -21,6 +21,11 @@ namespace WIDVE.Paths
 			get => _position;
 			protected set => _position = value;
 		}
+		public float getPosition
+		{
+			get => _position;
+			set => _position = value;
+		}
 
 		[SerializeField]
 		[HideInInspector]
@@ -51,6 +56,10 @@ namespace WIDVE.Paths
 		public float Distance => PositionToDistance(Position);
 
 		float MaxDistance => Path ? Path.path.length : 0;
+
+		public Vector3 GetPathDirection(float position){
+			return Path ? Path.path.GetDirection(position, EndInstruction) : Vector3.forward;
+		}
 
 		public Vector3 WorldPosition => Path ? Path.path.GetPointAtTime(Position, EndInstruction) : Vector3.zero;
 

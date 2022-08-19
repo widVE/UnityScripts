@@ -133,6 +133,11 @@ namespace WIDVE.Utilities
 		{
 			if(ActiveLerp != null) StopCoroutine(ActiveLerp);
 		}
+		
+		public bool LerpActive()
+		{
+			return (ActiveLerp != null);
+		}
 
 		public class Commands
 		{

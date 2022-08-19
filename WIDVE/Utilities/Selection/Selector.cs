@@ -26,7 +26,11 @@ namespace WIDVE.Utilities
 
 		[SerializeField]
 		ButtonFloat _triggerButton;
-		ButtonFloat TriggerButton => _triggerButton;
+		public ButtonFloat TriggerButton
+		{
+			get { return _triggerButton; }
+			set { _triggerButton = value; }
+		}
 
 		[SerializeField]
 		[Range(0, 1)]
@@ -58,7 +62,8 @@ namespace WIDVE.Utilities
 		public void Highlight(Collider[] colliders)
 		{
 			//get highlightable objects from colliders
-			List<IHighlightable> highlightables = GetComponentsFromColliders<IHighlightable>(colliders, GameObjectExtensions.SearchModes.Parents);
+			//7/27/2021 - Ross changed the highlight search here to be self not parents.
+			List<IHighlightable> highlightables = GetComponentsFromColliders<IHighlightable>(colliders, GameObjectExtensions.SearchModes.Self);//Parents);
 
 			//check list of currently highlighted objects
 			for(int i = CurrentHighlights.Count - 1; i >= 0; i--)

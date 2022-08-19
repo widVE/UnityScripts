@@ -9,7 +9,11 @@ namespace WIDVE.Paths
     {
         [SerializeField]
         ButtonVector2 _movementButton;
-        ButtonVector2 MovementButton => _movementButton;
+        public ButtonVector2 MovementButton
+		{
+			get { return _movementButton; }
+			set { _movementButton = value; }
+		}
 
         [SerializeField]
         PathPosition _position;
